@@ -1,0 +1,8 @@
+* text=auto
+*.java text eol=lf
+*.gradle text eol=lf
+*.json text eol=lf
+*.json5 text eol=lf
+*.png binary
+*.jar binary
+*.docx binary

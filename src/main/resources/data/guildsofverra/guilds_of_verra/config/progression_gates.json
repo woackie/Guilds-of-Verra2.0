@@ -1,0 +1,26 @@
+{
+  "nether": {
+    "adventurer_level": 25,
+    "skills": {
+      "exploration": 25,
+      "mining": 20,
+      "combat": 15
+    }
+  },
+  "end": {
+    "adventurer_level": 50,
+    "skills": {
+      "exploration": 45,
+      "mining": 40,
+      "combat": 40
+    }
+  },
+  "elytra": {
+    "skills": {
+      "exploration": 70
+    },
+    "required_nodes": [
+      "exploration:elytra_certification"
+    ]
+  }
+}

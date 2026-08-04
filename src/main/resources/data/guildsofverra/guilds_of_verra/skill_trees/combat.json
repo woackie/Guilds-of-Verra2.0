@@ -1,0 +1,354 @@
+{
+  "skill": "combat",
+  "max_level": 100,
+  "points_per_level": 1,
+  "total_cost": 100,
+  "nodes": [
+    {
+      "id": "iron_armour_training",
+      "min_level": 20,
+      "cost": 4,
+      "category": "certification",
+      "effect": "Hard-unlocks iron- and gold-tier armour.",
+      "prerequisites": []
+    },
+    {
+      "id": "diamond_armour_training",
+      "min_level": 40,
+      "cost": 6,
+      "category": "certification",
+      "effect": "Hard-unlocks diamond-tier armour.",
+      "prerequisites": [
+        "iron_armour_training"
+      ]
+    },
+    {
+      "id": "netherite_armour_training",
+      "min_level": 60,
+      "cost": 8,
+      "category": "certification",
+      "effect": "Hard-unlocks Netherite-tier armour.",
+      "prerequisites": [
+        "diamond_armour_training"
+      ]
+    },
+    {
+      "id": "vitality_1",
+      "min_level": 10,
+      "cost": 2,
+      "category": "passive",
+      "effect": "+1 maximum health point.",
+      "prerequisites": [],
+      "bonus": {
+        "type": "max_health",
+        "value": 1.0
+      }
+    },
+    {
+      "id": "vitality_2",
+      "min_level": 30,
+      "cost": 3,
+      "category": "passive",
+      "effect": "Additional +1 maximum health.",
+      "prerequisites": [
+        "vitality_1"
+      ],
+      "bonus": {
+        "type": "max_health",
+        "value": 1.0
+      }
+    },
+    {
+      "id": "vitality_3",
+      "min_level": 55,
+      "cost": 4,
+      "category": "passive",
+      "effect": "Additional +1 maximum health.",
+      "prerequisites": [
+        "vitality_2"
+      ],
+      "bonus": {
+        "type": "max_health",
+        "value": 1.0
+      }
+    },
+    {
+      "id": "vitality_4",
+      "min_level": 85,
+      "cost": 5,
+      "category": "passive",
+      "effect": "Additional +1; +4 total.",
+      "prerequisites": [
+        "vitality_3"
+      ],
+      "bonus": {
+        "type": "max_health",
+        "value": 1.0
+      }
+    },
+    {
+      "id": "resilience_1",
+      "min_level": 15,
+      "cost": 3,
+      "category": "passive",
+      "effect": "-1.5% incoming damage after armour.",
+      "prerequisites": [],
+      "bonus": {
+        "type": "incoming_damage",
+        "value": -0.015
+      }
+    },
+    {
+      "id": "resilience_2",
+      "min_level": 45,
+      "cost": 4,
+      "category": "passive",
+      "effect": "Additional -1.5% incoming damage.",
+      "prerequisites": [
+        "resilience_1"
+      ],
+      "bonus": {
+        "type": "incoming_damage",
+        "value": -0.015
+      }
+    },
+    {
+      "id": "resilience_3",
+      "min_level": 75,
+      "cost": 5,
+      "category": "passive",
+      "effect": "Additional -1.5%; -4.5% total.",
+      "prerequisites": [
+        "resilience_2"
+      ],
+      "bonus": {
+        "type": "incoming_damage",
+        "value": -0.015
+      }
+    },
+    {
+      "id": "iron_blade_training",
+      "min_level": 20,
+      "cost": 2,
+      "category": "certification",
+      "effect": "Hard-unlocks iron- and gold-tier swords.",
+      "prerequisites": []
+    },
+    {
+      "id": "diamond_blade_training",
+      "min_level": 40,
+      "cost": 3,
+      "category": "certification",
+      "effect": "Hard-unlocks diamond-tier swords.",
+      "prerequisites": [
+        "iron_blade_training"
+      ]
+    },
+    {
+      "id": "netherite_blade_training",
+      "min_level": 60,
+      "cost": 4,
+      "category": "certification",
+      "effect": "Hard-unlocks Netherite-tier swords.",
+      "prerequisites": [
+        "diamond_blade_training"
+      ]
+    },
+    {
+      "id": "sword_precision_1",
+      "min_level": 30,
+      "cost": 2,
+      "category": "passive",
+      "effect": "+3% sword damage and +7.5% sweeping damage.",
+      "prerequisites": [
+        "iron_blade_training"
+      ],
+      "bonus": {
+        "type": "sword_damage",
+        "value": 0.03
+      }
+    },
+    {
+      "id": "sword_precision_2",
+      "min_level": 75,
+      "cost": 3,
+      "category": "passive",
+      "effect": "Additional +3% sword damage and +7.5% sweeping damage.",
+      "prerequisites": [
+        "sword_precision_1"
+      ],
+      "bonus": {
+        "type": "sword_damage",
+        "value": 0.03
+      }
+    },
+    {
+      "id": "iron_axe_combat",
+      "min_level": 20,
+      "cost": 2,
+      "category": "certification",
+      "effect": "Hard-unlocks iron- and gold-tier axes as weapons.",
+      "prerequisites": []
+    },
+    {
+      "id": "diamond_axe_combat",
+      "min_level": 40,
+      "cost": 3,
+      "category": "certification",
+      "effect": "Hard-unlocks diamond-tier axes as weapons.",
+      "prerequisites": [
+        "iron_axe_combat"
+      ]
+    },
+    {
+      "id": "netherite_axe_combat",
+      "min_level": 60,
+      "cost": 4,
+      "category": "certification",
+      "effect": "Hard-unlocks Netherite-tier axes as weapons.",
+      "prerequisites": [
+        "diamond_axe_combat"
+      ]
+    },
+    {
+      "id": "axe_force_1",
+      "min_level": 30,
+      "cost": 2,
+      "category": "passive",
+      "effect": "+4% axe damage and 2% armour penetration.",
+      "prerequisites": [
+        "iron_axe_combat"
+      ],
+      "bonus": {
+        "type": "axe_damage",
+        "value": 0.04
+      }
+    },
+    {
+      "id": "axe_force_2",
+      "min_level": 75,
+      "cost": 3,
+      "category": "passive",
+      "effect": "Additional +4% axe damage and 2% armour penetration.",
+      "prerequisites": [
+        "axe_force_1"
+      ],
+      "bonus": {
+        "type": "axe_damage",
+        "value": 0.04
+      }
+    },
+    {
+      "id": "bow_training",
+      "min_level": 10,
+      "cost": 2,
+      "category": "certification",
+      "effect": "Hard-unlocks bows.",
+      "prerequisites": []
+    },
+    {
+      "id": "crossbow_training",
+      "min_level": 25,
+      "cost": 3,
+      "category": "certification",
+      "effect": "Hard-unlocks crossbows.",
+      "prerequisites": [
+        "bow_training"
+      ]
+    },
+    {
+      "id": "advanced_ranged_training",
+      "min_level": 60,
+      "cost": 4,
+      "category": "certification",
+      "effect": "Hard-unlocks configured advanced ranged weapons.",
+      "prerequisites": [
+        "crossbow_training"
+      ]
+    },
+    {
+      "id": "marksman_1",
+      "min_level": 35,
+      "cost": 2,
+      "category": "passive",
+      "effect": "+3% projectile damage and +5% bow draw/crossbow reload speed.",
+      "prerequisites": [
+        "bow_training"
+      ],
+      "bonus": {
+        "type": "projectile_damage",
+        "value": 0.03
+      }
+    },
+    {
+      "id": "marksman_2",
+      "min_level": 75,
+      "cost": 3,
+      "category": "passive",
+      "effect": "Additional +3% projectile damage and +5% draw/reload speed.",
+      "prerequisites": [
+        "marksman_1"
+      ],
+      "bonus": {
+        "type": "projectile_damage",
+        "value": 0.03
+      }
+    },
+    {
+      "id": "shield_training",
+      "min_level": 10,
+      "cost": 2,
+      "category": "certification",
+      "effect": "Hard-unlocks basic shields.",
+      "prerequisites": []
+    },
+    {
+      "id": "reinforced_shield_training",
+      "min_level": 30,
+      "cost": 3,
+      "category": "certification",
+      "effect": "Hard-unlocks configured reinforced shields.",
+      "prerequisites": [
+        "shield_training"
+      ]
+    },
+    {
+      "id": "masterwork_shield_training",
+      "min_level": 60,
+      "cost": 4,
+      "category": "certification",
+      "effect": "Hard-unlocks configured masterwork shields.",
+      "prerequisites": [
+        "reinforced_shield_training"
+      ]
+    },
+    {
+      "id": "guardian_1",
+      "min_level": 35,
+      "cost": 2,
+      "category": "passive",
+      "effect": "-5% shield durability loss and -4% knockback while blocking.",
+      "prerequisites": [
+        "shield_training"
+      ],
+      "bonus": {
+        "type": "shield_durability",
+        "value": -0.05
+      }
+    },
+    {
+      "id": "guardian_2",
+      "min_level": 75,
+      "cost": 3,
+      "category": "passive",
+      "effect": "Additional -5% shield durability loss and -4% knockback.",
+      "prerequisites": [
+        "guardian_1"
+      ],
+      "bonus": {
+        "type": "shield_durability",
+        "value": -0.05
+      }
+    }
+  ]
+}

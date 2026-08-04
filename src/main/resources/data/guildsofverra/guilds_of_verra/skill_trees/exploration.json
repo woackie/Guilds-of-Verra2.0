@@ -1,0 +1,341 @@
+{
+  "skill": "exploration",
+  "max_level": 100,
+  "points_per_level": 1,
+  "total_cost": 100,
+  "nodes": [
+    {
+      "id": "trailblazer_1",
+      "min_level": 5,
+      "cost": 2,
+      "category": "passive",
+      "effect": "+1% movement speed while on foot.",
+      "prerequisites": [],
+      "bonus": {
+        "type": "movement_speed",
+        "value": 0.01
+      }
+    },
+    {
+      "id": "trailblazer_2",
+      "min_level": 20,
+      "cost": 3,
+      "category": "passive",
+      "effect": "Additional +1% movement speed.",
+      "prerequisites": [
+        "trailblazer_1"
+      ],
+      "bonus": {
+        "type": "movement_speed",
+        "value": 0.01
+      }
+    },
+    {
+      "id": "trailblazer_3",
+      "min_level": 40,
+      "cost": 4,
+      "category": "passive",
+      "effect": "Additional +1% movement speed.",
+      "prerequisites": [
+        "trailblazer_2"
+      ],
+      "bonus": {
+        "type": "movement_speed",
+        "value": 0.01
+      }
+    },
+    {
+      "id": "trailblazer_4",
+      "min_level": 65,
+      "cost": 5,
+      "category": "passive",
+      "effect": "Additional +1% movement speed.",
+      "prerequisites": [
+        "trailblazer_3"
+      ],
+      "bonus": {
+        "type": "movement_speed",
+        "value": 0.01
+      }
+    },
+    {
+      "id": "trailblazer_5",
+      "min_level": 90,
+      "cost": 6,
+      "category": "passive",
+      "effect": "Additional +1%; +5% total.",
+      "prerequisites": [
+        "trailblazer_4"
+      ],
+      "bonus": {
+        "type": "movement_speed",
+        "value": 0.01
+      }
+    },
+    {
+      "id": "efficient_traveler_1",
+      "min_level": 10,
+      "cost": 3,
+      "category": "passive",
+      "effect": "-3% exhaustion from sprinting, swimming and jumping.",
+      "prerequisites": [],
+      "bonus": {
+        "type": "travel_exhaustion",
+        "value": -0.03
+      }
+    },
+    {
+      "id": "efficient_traveler_2",
+      "min_level": 25,
+      "cost": 4,
+      "category": "passive",
+      "effect": "Additional -3% travel exhaustion.",
+      "prerequisites": [
+        "efficient_traveler_1"
+      ],
+      "bonus": {
+        "type": "travel_exhaustion",
+        "value": -0.03
+      }
+    },
+    {
+      "id": "efficient_traveler_3",
+      "min_level": 50,
+      "cost": 5,
+      "category": "passive",
+      "effect": "Additional -3% travel exhaustion.",
+      "prerequisites": [
+        "efficient_traveler_2"
+      ],
+      "bonus": {
+        "type": "travel_exhaustion",
+        "value": -0.03
+      }
+    },
+    {
+      "id": "efficient_traveler_4",
+      "min_level": 80,
+      "cost": 6,
+      "category": "passive",
+      "effect": "Additional -3%; -12% total.",
+      "prerequisites": [
+        "efficient_traveler_3"
+      ],
+      "bonus": {
+        "type": "travel_exhaustion",
+        "value": -0.03
+      }
+    },
+    {
+      "id": "safe_landing_1",
+      "min_level": 15,
+      "cost": 3,
+      "category": "passive",
+      "effect": "-5% fall damage.",
+      "prerequisites": [],
+      "bonus": {
+        "type": "fall_damage",
+        "value": -0.05
+      }
+    },
+    {
+      "id": "safe_landing_2",
+      "min_level": 30,
+      "cost": 4,
+      "category": "passive",
+      "effect": "Additional -5% fall damage.",
+      "prerequisites": [
+        "safe_landing_1"
+      ],
+      "bonus": {
+        "type": "fall_damage",
+        "value": -0.05
+      }
+    },
+    {
+      "id": "safe_landing_3",
+      "min_level": 55,
+      "cost": 5,
+      "category": "passive",
+      "effect": "Additional -5% fall damage.",
+      "prerequisites": [
+        "safe_landing_2"
+      ],
+      "bonus": {
+        "type": "fall_damage",
+        "value": -0.05
+      }
+    },
+    {
+      "id": "safe_landing_4",
+      "min_level": 85,
+      "cost": 6,
+      "category": "passive",
+      "effect": "Additional -5%; -20% total.",
+      "prerequisites": [
+        "safe_landing_3"
+      ],
+      "bonus": {
+        "type": "fall_damage",
+        "value": -0.05
+      }
+    },
+    {
+      "id": "aquatic_traveler_1",
+      "min_level": 10,
+      "cost": 3,
+      "category": "passive",
+      "effect": "+4% swimming speed.",
+      "prerequisites": [],
+      "bonus": {
+        "type": "swim_speed",
+        "value": 0.04
+      }
+    },
+    {
+      "id": "aquatic_traveler_2",
+      "min_level": 35,
+      "cost": 4,
+      "category": "passive",
+      "effect": "Additional +4% swimming speed.",
+      "prerequisites": [
+        "aquatic_traveler_1"
+      ],
+      "bonus": {
+        "type": "swim_speed",
+        "value": 0.04
+      }
+    },
+    {
+      "id": "aquatic_traveler_3",
+      "min_level": 70,
+      "cost": 5,
+      "category": "passive",
+      "effect": "Additional +4%; +12% total.",
+      "prerequisites": [
+        "aquatic_traveler_2"
+      ],
+      "bonus": {
+        "type": "swim_speed",
+        "value": 0.04
+      }
+    },
+    {
+      "id": "endurance_1",
+      "min_level": 15,
+      "cost": 3,
+      "category": "passive",
+      "effect": "+10% maximum air supply.",
+      "prerequisites": [],
+      "bonus": {
+        "type": "air_supply",
+        "value": 0.1
+      }
+    },
+    {
+      "id": "endurance_2",
+      "min_level": 45,
+      "cost": 4,
+      "category": "passive",
+      "effect": "Additional +10% air supply.",
+      "prerequisites": [
+        "endurance_1"
+      ],
+      "bonus": {
+        "type": "air_supply",
+        "value": 0.1
+      }
+    },
+    {
+      "id": "endurance_3",
+      "min_level": 75,
+      "cost": 5,
+      "category": "passive",
+      "effect": "Additional +10%; +30% total.",
+      "prerequisites": [
+        "endurance_2"
+      ],
+      "bonus": {
+        "type": "air_supply",
+        "value": 0.1
+      }
+    },
+    {
+      "id": "map_savvy_1",
+      "min_level": 20,
+      "cost": 2,
+      "category": "passive",
+      "effect": "+10% effective map exploration radius.",
+      "prerequisites": [],
+      "bonus": {
+        "type": "map_radius",
+        "value": 0.1
+      }
+    },
+    {
+      "id": "map_savvy_2",
+      "min_level": 55,
+      "cost": 3,
+      "category": "passive",
+      "effect": "Additional +10% map radius.",
+      "prerequisites": [
+        "map_savvy_1"
+      ],
+      "bonus": {
+        "type": "map_radius",
+        "value": 0.1
+      }
+    },
+    {
+      "id": "discovery_instinct_1",
+      "min_level": 5,
+      "cost": 2,
+      "category": "passive",
+      "effect": "+5% Exploration XP from discoveries.",
+      "prerequisites": [],
+      "bonus": {
+        "type": "discovery_xp",
+        "value": 0.05
+      }
+    },
+    {
+      "id": "discovery_instinct_2",
+      "min_level": 35,
+      "cost": 3,
+      "category": "passive",
+      "effect": "Additional +5% discovery XP.",
+      "prerequisites": [
+        "discovery_instinct_1"
+      ],
+      "bonus": {
+        "type": "discovery_xp",
+        "value": 0.05
+      }
+    },
+    {
+      "id": "discovery_instinct_3",
+      "min_level": 70,
+      "cost": 4,
+      "category": "passive",
+      "effect": "Additional +5%; +15% total.",
+      "prerequisites": [
+        "discovery_instinct_2"
+      ],
+      "bonus": {
+        "type": "discovery_xp",
+        "value": 0.05
+      }
+    },
+    {
+      "id": "elytra_certification",
+      "min_level": 70,
+      "cost": 6,
+      "category": "certification",
+      "effect": "Hard-unlocks Elytra use.",
+      "prerequisites": [
+        "trailblazer_3",
+        "safe_landing_2"
+      ]
+    }
+  ]
+}

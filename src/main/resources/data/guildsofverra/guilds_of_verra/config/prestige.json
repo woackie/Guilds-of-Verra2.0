@@ -1,0 +1,46 @@
+{
+  "enabled": true,
+  "max_rank": 5,
+  "required_level": 100,
+  "reset_current_level": true,
+  "keep_nodes": true,
+  "keep_highest_level": true,
+  "cycle_xp_multiplier": "1 + (0.15 * current_prestige_rank)",
+  "rewards": {
+    "exploration": [
+      "title:prestigious_explorer",
+      "xp_gain:+0.03",
+      "movement_speed:+0.02",
+      "fall_damage:-0.05",
+      "discovery_xp:+0.10"
+    ],
+    "fishing": [
+      "title:prestigious_angler",
+      "xp_gain:+0.03",
+      "treasure_weight:+0.03",
+      "rod_preservation:+0.03",
+      "extra_catch:+0.02"
+    ],
+    "cooking": [
+      "title:prestigious_chef",
+      "xp_gain:+0.03",
+      "ingredient_preservation:+0.02",
+      "meal_duration:+0.03",
+      "extra_output:+0.02"
+    ],
+    "mining": [
+      "title:prestigious_miner",
+      "xp_gain:+0.03",
+      "tool_preservation:+0.02",
+      "mining_speed:+0.02",
+      "common_resource_bonus:+0.02"
+    ],
+    "combat": [
+      "title:prestigious_warrior",
+      "xp_gain:+0.03",
+      "max_health:+1",
+      "all_damage:+0.02",
+      "incoming_damage:-0.02"
+    ]
+  }
+}

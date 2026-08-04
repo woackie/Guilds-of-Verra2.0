@@ -1,0 +1,9 @@
+{
+  // Future runtime config template. Resource-backed defaults are authoritative in 0.1.0-dev.1.
+  "enable_hard_locks": true,
+  "enable_dimension_gates": true,
+  "enable_elite_mobs": true,
+  "enable_discoveries": true,
+  "max_skill_level": 100,
+  "max_adventurer_level": 100
+}

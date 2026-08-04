@@ -1,0 +1,5 @@
+{
+  "nether": { "adventurer": 25, "exploration": 25, "mining": 20, "combat": 15 },
+  "end": { "adventurer": 50, "exploration": 45, "mining": 40, "combat": 40 },
+  "prestige": { "enabled": true, "max_rank": 5, "keep_nodes": true }
+}

@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "max_skill_level": 100,
+  "adventurer_level": {
+    "mode": "highest_ever_average",
+    "rounding": "floor"
+  },
+  "xp_curve": {
+    "formula": "round(100 + 12*level + 1.5*level^2)",
+    "total_to_100": 561950
+  },
+  "progression_targets_hours": {
+    "ender_dragon_min": 20,
+    "ender_dragon_max": 35,
+    "all_skills_100_min": 60,
+    "all_skills_100_max": 100
+  },
+  "xp_sources": {
+    "exploration": {
+      "new_cell": 125,
+      "cell_size": 128,
+      "biome_common": 250,
+      "biome_uncommon": 500,
+      "biome_rare": 750,
+      "structure_common": 500,
+      "structure_rare": 1200,
+      "structure_major": 2500,
+      "dimension_first_entry": 3000
+    },
+    "fishing": {
+      "junk": 20,
+      "common": 60,
+      "uncommon": 100,
+      "rare": 180,
+      "treasure_min": 250,
+      "treasure_max": 750,
+      "first_unique_bonus": 250,
+      "weather_multiplier": 1.15,
+      "new_biome_bonus": 300
+    },
+    "cooking": {
+      "cooked_food_hunger_multiplier": 12,
+      "prepared_food_hunger_multiplier": 10,
+      "min": 12,
+      "max": 120,
+      "first_recipe_bonus": 250,
+      "variety_bonus_per_item": 0.05,
+      "variety_bonus_max": 0.25
+    },
+    "mining": {
+      "minecraft:stone": 1,
+      "minecraft:deepslate": 1,
+      "minecraft:coal_ore": 8,
+      "minecraft:deepslate_coal_ore": 8,
+      "minecraft:copper_ore": 10,
+      "minecraft:deepslate_copper_ore": 10,
+      "minecraft:iron_ore": 25,
+      "minecraft:deepslate_iron_ore": 25,
+      "minecraft:gold_ore": 35,
+      "minecraft:deepslate_gold_ore": 35,
+      "minecraft:redstone_ore": 18,
+      "minecraft:deepslate_redstone_ore": 18,
+      "minecraft:lapis_ore": 18,
+      "minecraft:deepslate_lapis_ore": 18,
+      "minecraft:diamond_ore": 120,
+      "minecraft:deepslate_diamond_ore": 120,
+      "minecraft:emerald_ore": 150,
+      "minecraft:deepslate_emerald_ore": 150,
+      "minecraft:ancient_debris": 300
+    },
+    "combat": {
+      "damage_multiplier": 3.0,
+      "kill_health_multiplier": 2.0,
+      "hostile_factor": 1.0,
+      "armoured_factor": 1.25,
+      "elite_factor_min": 3.0,
+      "elite_factor_max": 4.0,
+      "boss_factor": 5.0,
+      "spawner_factor": 0.35,
+      "farm_floor": 0.25
+    }
+  }
+}

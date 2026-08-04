@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "guildsofverra",
+  "version": "${version}",
+  "name": "Guilds of Verra",
+  "description": "A lightweight, configurable, vanilla-style RPG progression overhaul.",
+  "authors": ["Gilles"],
+  "license": "MIT",
+  "icon": "assets/guildsofverra/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.guildsofverra.GuildsOfVerra"],
+    "client": ["com.guildsofverra.client.GuildsOfVerraClient"]
+  },
+  "mixins": ["guildsofverra.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "minecraft": "~26.2",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}

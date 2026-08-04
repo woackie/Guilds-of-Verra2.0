@@ -1,0 +1,280 @@
+{
+  "skill": "mining",
+  "max_level": 100,
+  "points_per_level": 1,
+  "total_cost": 100,
+  "nodes": [
+    {
+      "id": "iron_tool_mastery",
+      "min_level": 20,
+      "cost": 5,
+      "category": "certification",
+      "effect": "Hard-unlocks iron- and gold-tier pickaxes, shovels, hoes and tool-use of axes.",
+      "prerequisites": []
+    },
+    {
+      "id": "diamond_tool_mastery",
+      "min_level": 40,
+      "cost": 8,
+      "category": "certification",
+      "effect": "Hard-unlocks diamond-tier tools.",
+      "prerequisites": [
+        "iron_tool_mastery"
+      ]
+    },
+    {
+      "id": "netherite_tool_mastery",
+      "min_level": 60,
+      "cost": 12,
+      "category": "certification",
+      "effect": "Hard-unlocks Netherite-tier tools.",
+      "prerequisites": [
+        "diamond_tool_mastery"
+      ]
+    },
+    {
+      "id": "miners_rhythm_1",
+      "min_level": 5,
+      "cost": 2,
+      "category": "passive",
+      "effect": "+2% mining speed with eligible tools.",
+      "prerequisites": [],
+      "bonus": {
+        "type": "mining_speed",
+        "value": 0.02
+      }
+    },
+    {
+      "id": "miners_rhythm_2",
+      "min_level": 15,
+      "cost": 3,
+      "category": "passive",
+      "effect": "Additional +2% mining speed.",
+      "prerequisites": [
+        "miners_rhythm_1"
+      ],
+      "bonus": {
+        "type": "mining_speed",
+        "value": 0.02
+      }
+    },
+    {
+      "id": "miners_rhythm_3",
+      "min_level": 30,
+      "cost": 4,
+      "category": "passive",
+      "effect": "Additional +2% mining speed.",
+      "prerequisites": [
+        "miners_rhythm_2"
+      ],
+      "bonus": {
+        "type": "mining_speed",
+        "value": 0.02
+      }
+    },
+    {
+      "id": "miners_rhythm_4",
+      "min_level": 55,
+      "cost": 5,
+      "category": "passive",
+      "effect": "Additional +2% mining speed.",
+      "prerequisites": [
+        "miners_rhythm_3"
+      ],
+      "bonus": {
+        "type": "mining_speed",
+        "value": 0.02
+      }
+    },
+    {
+      "id": "miners_rhythm_5",
+      "min_level": 85,
+      "cost": 6,
+      "category": "passive",
+      "effect": "Additional +2%; +10% total.",
+      "prerequisites": [
+        "miners_rhythm_4"
+      ],
+      "bonus": {
+        "type": "mining_speed",
+        "value": 0.02
+      }
+    },
+    {
+      "id": "tool_care_1",
+      "min_level": 10,
+      "cost": 3,
+      "category": "passive",
+      "effect": "2% chance to preserve eligible tool durability.",
+      "prerequisites": [],
+      "bonus": {
+        "type": "tool_durability",
+        "value": 0.02
+      }
+    },
+    {
+      "id": "tool_care_2",
+      "min_level": 25,
+      "cost": 4,
+      "category": "passive",
+      "effect": "Additional 2% preservation chance.",
+      "prerequisites": [
+        "tool_care_1"
+      ],
+      "bonus": {
+        "type": "tool_durability",
+        "value": 0.02
+      }
+    },
+    {
+      "id": "tool_care_3",
+      "min_level": 50,
+      "cost": 5,
+      "category": "passive",
+      "effect": "Additional 2% preservation chance.",
+      "prerequisites": [
+        "tool_care_2"
+      ],
+      "bonus": {
+        "type": "tool_durability",
+        "value": 0.02
+      }
+    },
+    {
+      "id": "tool_care_4",
+      "min_level": 80,
+      "cost": 6,
+      "category": "passive",
+      "effect": "Additional 2%; 8% total.",
+      "prerequisites": [
+        "tool_care_3"
+      ],
+      "bonus": {
+        "type": "tool_durability",
+        "value": 0.02
+      }
+    },
+    {
+      "id": "ore_wisdom_1",
+      "min_level": 10,
+      "cost": 3,
+      "category": "passive",
+      "effect": "+5% Mining XP from ores.",
+      "prerequisites": [],
+      "bonus": {
+        "type": "ore_xp",
+        "value": 0.05
+      }
+    },
+    {
+      "id": "ore_wisdom_2",
+      "min_level": 30,
+      "cost": 4,
+      "category": "passive",
+      "effect": "Additional +5% ore XP.",
+      "prerequisites": [
+        "ore_wisdom_1"
+      ],
+      "bonus": {
+        "type": "ore_xp",
+        "value": 0.05
+      }
+    },
+    {
+      "id": "ore_wisdom_3",
+      "min_level": 60,
+      "cost": 5,
+      "category": "passive",
+      "effect": "Additional +5% ore XP.",
+      "prerequisites": [
+        "ore_wisdom_2"
+      ],
+      "bonus": {
+        "type": "ore_xp",
+        "value": 0.05
+      }
+    },
+    {
+      "id": "ore_wisdom_4",
+      "min_level": 90,
+      "cost": 6,
+      "category": "passive",
+      "effect": "Additional +5%; +20% total.",
+      "prerequisites": [
+        "ore_wisdom_3"
+      ],
+      "bonus": {
+        "type": "ore_xp",
+        "value": 0.05
+      }
+    },
+    {
+      "id": "resourceful_mining_1",
+      "min_level": 20,
+      "cost": 3,
+      "category": "passive",
+      "effect": "1.5% chance for one extra common raw material.",
+      "prerequisites": [
+        "iron_tool_mastery"
+      ],
+      "bonus": {
+        "type": "common_resource_bonus",
+        "value": 0.015
+      }
+    },
+    {
+      "id": "resourceful_mining_2",
+      "min_level": 50,
+      "cost": 4,
+      "category": "passive",
+      "effect": "Additional 1.5% bonus-resource chance.",
+      "prerequisites": [
+        "resourceful_mining_1"
+      ],
+      "bonus": {
+        "type": "common_resource_bonus",
+        "value": 0.015
+      }
+    },
+    {
+      "id": "resourceful_mining_3",
+      "min_level": 85,
+      "cost": 5,
+      "category": "passive",
+      "effect": "Additional 1.5%; 4.5% total.",
+      "prerequisites": [
+        "resourceful_mining_2"
+      ],
+      "bonus": {
+        "type": "common_resource_bonus",
+        "value": 0.015
+      }
+    },
+    {
+      "id": "underground_resilience_1",
+      "min_level": 25,
+      "cost": 3,
+      "category": "passive",
+      "effect": "-5% fall and explosion damage below the surface.",
+      "prerequisites": [],
+      "bonus": {
+        "type": "underground_damage",
+        "value": -0.05
+      }
+    },
+    {
+      "id": "underground_resilience_2",
+      "min_level": 70,
+      "cost": 4,
+      "category": "passive",
+      "effect": "Additional -5%; -10% total.",
+      "prerequisites": [
+        "underground_resilience_1"
+      ],
+      "bonus": {
+        "type": "underground_damage",
+        "value": -0.05
+      }
+    }
+  ]
+}

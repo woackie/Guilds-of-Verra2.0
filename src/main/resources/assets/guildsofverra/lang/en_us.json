@@ -1,0 +1,16 @@
+{
+  "key.category.guildsofverra": "Guilds of Verra",
+  "key.guildsofverra.open_journal": "Open Journal",
+  "screen.guildsofverra.journal": "Guilds of Verra Journal",
+  "screen.guildsofverra.overview": "Overview",
+  "screen.guildsofverra.adventurer_level": "Adventurer Level: %s",
+  "message.guildsofverra.locked": "Locked: %s",
+  "message.guildsofverra.level_up": "%s reached level %s!",
+  "message.guildsofverra.node_purchased": "Purchased %s.",
+  "message.guildsofverra.prestige": "%s prestiged to rank %s.",
+  "skill.guildsofverra.exploration": "Exploration",
+  "skill.guildsofverra.fishing": "Fishing",
+  "skill.guildsofverra.cooking": "Cooking",
+  "skill.guildsofverra.mining": "Mining",
+  "skill.guildsofverra.combat": "Combat"
+}

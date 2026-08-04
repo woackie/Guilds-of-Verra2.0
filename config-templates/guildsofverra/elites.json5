@@ -1,0 +1,7 @@
+{
+  "enabled": true,
+  "base_spawn_chance": 0.005,
+  "maximum_spawn_chance": 0.05,
+  "minimum_adventurer_level": 10,
+  "use_vanilla_ai_only": true
+}

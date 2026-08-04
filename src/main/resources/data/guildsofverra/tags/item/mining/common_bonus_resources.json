@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:cobblestone",
+    "minecraft:cobbled_deepslate",
+    "minecraft:coal",
+    "minecraft:raw_copper",
+    "minecraft:raw_iron",
+    "minecraft:raw_gold"
+  ]
+}

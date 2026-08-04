@@ -1,0 +1,29 @@
+{
+  "locking_enabled": false,
+  "categories": [
+    "biomes",
+    "structures",
+    "creatures",
+    "elite_variants",
+    "ores_materials",
+    "foods_fish",
+    "dimensions",
+    "bosses"
+  ],
+  "rewards": {
+    "elite_first_encounter_xp": 250,
+    "dimension_first_entry_xp": 3000
+  },
+  "entries": [
+    "minecraft:overworld",
+    "minecraft:the_nether",
+    "minecraft:the_end",
+    "guildsofverra:tank_zombie",
+    "guildsofverra:armoured_skeleton",
+    "guildsofverra:marksman_skeleton",
+    "guildsofverra:brute_spider",
+    "guildsofverra:venom_spider",
+    "guildsofverra:bulwark_drowned",
+    "guildsofverra:volatile_creeper"
+  ]
+}

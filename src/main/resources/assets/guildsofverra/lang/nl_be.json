@@ -1,0 +1,16 @@
+{
+  "key.category.guildsofverra": "Guilds of Verra",
+  "key.guildsofverra.open_journal": "Open dagboek",
+  "screen.guildsofverra.journal": "Guilds of Verra-dagboek",
+  "screen.guildsofverra.overview": "Overzicht",
+  "screen.guildsofverra.adventurer_level": "Avonturiersniveau: %s",
+  "message.guildsofverra.locked": "Vergrendeld: %s",
+  "message.guildsofverra.level_up": "%s heeft niveau %s bereikt!",
+  "message.guildsofverra.node_purchased": "%s gekocht.",
+  "message.guildsofverra.prestige": "%s heeft prestigerniveau %s bereikt.",
+  "skill.guildsofverra.exploration": "Verkenning",
+  "skill.guildsofverra.fishing": "Vissen",
+  "skill.guildsofverra.cooking": "Koken",
+  "skill.guildsofverra.mining": "Mijnbouw",
+  "skill.guildsofverra.combat": "Gevecht"
+}

@@ -1,0 +1,87 @@
+{
+  "spawn": {
+    "minimum_adventurer_level": 10,
+    "chance_formula": "min(0.05, 0.005 + 0.00045 * adventurer_level)",
+    "near_player_cap": 3,
+    "near_player_radius": 48,
+    "region_cap": 8,
+    "stat_scaling_formula": "min(1.30, 1 + 0.003 * nearby_adventurer_level)"
+  },
+  "variants": [
+    {
+      "id": "tank_zombie",
+      "base_entity": "minecraft:zombie",
+      "scale": 1.18,
+      "health_multiplier": 2.25,
+      "speed_multiplier": 0.78,
+      "armor_bonus": 8.0,
+      "knockback_resistance": 0.65,
+      "damage_multiplier": 1.25,
+      "xp_multiplier": 4.0,
+      "display_name": "Tank Zombie"
+    },
+    {
+      "id": "armoured_skeleton",
+      "base_entity": "minecraft:skeleton",
+      "scale": 1.05,
+      "health_multiplier": 1.75,
+      "speed_multiplier": 0.9,
+      "armor_bonus": 8.0,
+      "xp_multiplier": 3.5,
+      "display_name": "Armoured Skeleton"
+    },
+    {
+      "id": "marksman_skeleton",
+      "base_entity": "minecraft:skeleton",
+      "scale": 1.0,
+      "health_multiplier": 1.4,
+      "follow_range_multiplier": 1.4,
+      "projectile_damage_multiplier": 1.25,
+      "projectile_speed_multiplier": 1.25,
+      "xp_multiplier": 3.0,
+      "display_name": "Marksman Skeleton"
+    },
+    {
+      "id": "brute_spider",
+      "base_entity": "minecraft:spider",
+      "scale": 1.2,
+      "health_multiplier": 2.0,
+      "speed_multiplier": 0.9,
+      "damage_multiplier": 1.35,
+      "knockback_resistance": 0.35,
+      "xp_multiplier": 3.5,
+      "display_name": "Brute Spider"
+    },
+    {
+      "id": "venom_spider",
+      "base_entity": "minecraft:spider",
+      "scale": 1.05,
+      "health_multiplier": 1.5,
+      "on_hit_effect": "minecraft:poison",
+      "xp_multiplier": 3.0,
+      "display_name": "Venom Spider"
+    },
+    {
+      "id": "bulwark_drowned",
+      "base_entity": "minecraft:drowned",
+      "scale": 1.12,
+      "health_multiplier": 2.0,
+      "armor_bonus": 7.0,
+      "knockback_resistance": 0.5,
+      "land_speed_multiplier": 0.85,
+      "xp_multiplier": 3.5,
+      "display_name": "Bulwark Drowned"
+    },
+    {
+      "id": "volatile_creeper",
+      "base_entity": "minecraft:creeper",
+      "scale": 1.1,
+      "health_multiplier": 1.5,
+      "fuse_multiplier": 1.2,
+      "entity_explosion_damage_multiplier": 1.25,
+      "block_damage_multiplier": 1.0,
+      "xp_multiplier": 3.0,
+      "display_name": "Volatile Creeper"
+    }
+  ]
+}
