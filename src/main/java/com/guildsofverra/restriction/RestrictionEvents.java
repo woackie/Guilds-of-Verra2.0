@@ -54,7 +54,7 @@ public final class RestrictionEvents {
     ) {
         RequirementResult result = check.apply(ProfileManager.get(player), stack);
         if (!result.allowed()) {
-            player.displayClientMessage(Component.literal("Locked: " + result.reason()), true);
+            player.sendSystemMessage(Component.literal("Locked: " + result.reason()));
         }
         return result.allowed();
     }
