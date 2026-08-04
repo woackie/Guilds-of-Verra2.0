@@ -26,7 +26,7 @@ public final class GuildsOfVerra implements ModInitializer {
         RestrictionEvents.initialize();
         DimensionGateEvents.initialize();
         EliteMobService.initialize();
-        LOGGER.info("Guilds of Verra 0.1.0-dev.1 initialized.");
+        LOGGER.info("Guilds of Verra 0.1.0-dev.2 initialized.");
     }
 
     public static Identifier id(String path) { return Identifier.fromNamespaceAndPath(MOD_ID, path); }
