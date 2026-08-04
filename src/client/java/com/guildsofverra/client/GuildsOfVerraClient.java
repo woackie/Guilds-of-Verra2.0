@@ -31,7 +31,7 @@ public final class GuildsOfVerraClient implements ClientModInitializer {
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (openJournal.consumeClick()) {
-                Minecraft.getInstance().setScreen(new JournalScreen());
+                Minecraft.getInstance().setScreenAndShow(new JournalScreen());
             }
         });
     }
