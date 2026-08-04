@@ -22,7 +22,7 @@ public final class GuildsOfVerraClient implements ClientModInitializer {
             KeyMapping.Category.MISC
         ));
 
-        ClientPlayNetworking.registerReceiver(
+        ClientPlayNetworking.registerGlobalReceiver(
             ProfileSyncPayload.TYPE,
             (payload, context) -> context.client().execute(
                 () -> ClientProfileCache.update(payload.json())
