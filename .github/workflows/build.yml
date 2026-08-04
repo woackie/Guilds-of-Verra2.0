@@ -4,6 +4,10 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,15 +30,72 @@ jobs:
           gradle-version: '9.5.1'
 
       - name: Validate design data
-        run: python3 scripts/validate_project.py
+        id: validation
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python3 scripts/validate_project.py 2>&1 | tee validation-output.txt
 
       - name: Build mod
-        run: gradle build --stacktrace
+        id: gradle_build
+        if: steps.validation.outcome == 'success'
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          gradle build --stacktrace 2>&1 | tee build-output.txt
+
+      - name: Report build failure
+        if: always() && github.event_name == 'push' && (steps.validation.outcome == 'failure' || steps.gradle_build.outcome == 'failure')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ steps.validation.outcome }}" = "failure" ]; then
+            LOG_FILE="validation-output.txt"
+            FAILURE_STAGE="Project validation"
+          else
+            LOG_FILE="build-output.txt"
+            FAILURE_STAGE="Gradle/Fabric compilation"
+          fi
+
+          {
+            echo "## Automated CI failure report"
+            echo
+            echo "**Stage:** ${FAILURE_STAGE}"
+            echo "**Commit:** \`${GITHUB_SHA}\`"
+            echo "**Run:** ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            echo
+            echo "### Relevant log output"
+            echo '```text'
+            grep -E "(^|[[:space:]])(error:|FAILURE:|Caused by:|Could not|cannot find symbol|package .* does not exist|Execution failed|What went wrong|BUILD FAILED)|^[^[:space:]].*\.java:[0-9]+:" "$LOG_FILE" | tail -n 220 || tail -n 220 "$LOG_FILE"
+            echo '```'
+          } > ci-failure.md
+
+          ISSUE_NUMBER=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search 'Automated CI failure report in:title' --json number --jq '.[0].number // empty')
+
+          if [ -n "$ISSUE_NUMBER" ]; then
+            gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file ci-failure.md
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "Automated CI failure report" --body-file ci-failure.md
+          fi
+
+      - name: Fail workflow when validation or compilation failed
+        if: always() && (steps.validation.outcome == 'failure' || steps.gradle_build.outcome == 'failure')
+        run: exit 1
 
       - name: Upload build artifacts
-        if: success()
+        if: steps.validation.outcome == 'success' && steps.gradle_build.outcome == 'success'
         uses: actions/upload-artifact@v7
         with:
           name: guilds-of-verra-build
           path: build/libs/*.jar
           if-no-files-found: error
+
+      - name: Close recovered CI issue
+        if: github.event_name == 'push' && steps.validation.outcome == 'success' && steps.gradle_build.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ISSUE_NUMBER=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search 'Automated CI failure report in:title' --json number --jq '.[0].number // empty')
+          if [ -n "$ISSUE_NUMBER" ]; then
+            gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --comment "The build is passing again on commit ${GITHUB_SHA}."
+          fi
