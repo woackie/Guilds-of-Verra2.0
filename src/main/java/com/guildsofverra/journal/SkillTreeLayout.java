@@ -12,12 +12,14 @@ import java.util.stream.Collectors;
 
 /**
  * Produces a deterministic, scrollable two-dimensional layout from a data-driven skill tree.
- * Progression runs left-to-right by minimum level while node categories form vertical lanes.
+ * Progression runs left-to-right through ordered level columns while node categories form
+ * vertical lanes.
  */
 public final class SkillTreeLayout {
     public static final int NODE_WIDTH = 132;
     public static final int NODE_HEIGHT = 42;
-    public static final int LEVEL_SPACING = 18;
+    public static final int COLUMN_GAP = 28;
+    public static final int LEVEL_SPACING = NODE_WIDTH + COLUMN_GAP;
     public static final int STACK_SPACING = 10;
     public static final int LANE_GAP = 36;
     public static final int PADDING = 40;
@@ -27,6 +29,7 @@ public final class SkillTreeLayout {
     public static Layout build(SkillTreeDefinition tree) {
         LinkedHashMap<String, LaneMetrics> lanes = laneMetrics(tree.nodes());
         Map<String, Integer> laneBaseY = laneBasePositions(lanes);
+        Map<Integer, Integer> levelColumns = levelColumns(tree.nodes());
         Map<String, Integer> stackIndexes = new HashMap<>();
         List<LayoutNode> nodes = new ArrayList<>();
         Map<String, LayoutNode> nodesById = new HashMap<>();
@@ -38,7 +41,7 @@ public final class SkillTreeLayout {
             LaneMetrics lane = lanes.get(category);
             String stackKey = category + "\u0000" + node.minLevel();
             int stackIndex = stackIndexes.merge(stackKey, 1, Integer::sum) - 1;
-            int x = PADDING + node.minLevel() * LEVEL_SPACING;
+            int x = PADDING + levelColumns.get(node.minLevel()) * LEVEL_SPACING;
             int y = laneBaseY.get(category) + stackIndex * (NODE_HEIGHT + STACK_SPACING);
 
             LayoutNode positioned = new LayoutNode(
@@ -81,6 +84,19 @@ public final class SkillTreeLayout {
             .flatMap(node -> node.prerequisites().stream())
             .filter(prerequisite -> !nodeIds.contains(prerequisite))
             .collect(Collectors.toUnmodifiableSet());
+    }
+
+    private static Map<Integer, Integer> levelColumns(List<SkillNodeDefinition> nodes) {
+        List<Integer> levels = nodes.stream()
+            .map(SkillNodeDefinition::minLevel)
+            .distinct()
+            .sorted()
+            .toList();
+        Map<Integer, Integer> columns = new HashMap<>();
+        for (int index = 0; index < levels.size(); index++) {
+            columns.put(levels.get(index), index);
+        }
+        return Map.copyOf(columns);
     }
 
     private static LinkedHashMap<String, LaneMetrics> laneMetrics(
