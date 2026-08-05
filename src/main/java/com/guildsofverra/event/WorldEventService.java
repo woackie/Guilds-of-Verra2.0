@@ -19,6 +19,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.clock.WorldClocks;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -285,17 +286,17 @@ public final class WorldEventService {
         }
 
         if (ending.type() == WorldEventType.SEVERE_THUNDERSTORM) {
-            ServerLevel overworld = server.getLevel(Level.OVERWORLD);
-            if (overworld != null) {
-                overworld.setWeather(6000, 0, false, false);
-            }
+            server.setWeatherParameters(6000, 0, false, false);
         }
         if (ending.type() == WorldEventType.BLOOD_MOON
             || ending.type() == WorldEventType.LONG_NIGHT) {
             ServerLevel overworld = server.getLevel(Level.OVERWORLD);
             if (overworld != null) {
-                long day = overworld.getTimeOfDay();
-                overworld.setTimeOfDay(day - Math.floorMod(day, 24_000L) + 23_000L);
+                long day = overworld.getOverworldClockTime();
+                setOverworldClockTime(
+                    overworld,
+                    day - Math.floorMod(day, 24_000L) + 23_000L
+                );
             }
         }
 
@@ -314,15 +315,20 @@ public final class WorldEventService {
         if (overworld == null) {
             return;
         }
-        long day = overworld.getTimeOfDay();
-        overworld.setTimeOfDay(day - Math.floorMod(day, 24_000L) + 18_000L);
+        long day = overworld.getOverworldClockTime();
+        setOverworldClockTime(
+            overworld,
+            day - Math.floorMod(day, 24_000L) + 18_000L
+        );
     }
 
     private static void maintainStorm(MinecraftServer server) {
-        ServerLevel overworld = server.getLevel(Level.OVERWORLD);
-        if (overworld != null) {
-            overworld.setWeather(0, 400, true, true);
-        }
+        server.setWeatherParameters(0, 400, true, true);
+    }
+
+    private static void setOverworldClockTime(ServerLevel level, long ticks) {
+        var clock = level.registryAccess().getOrThrow(WorldClocks.OVERWORLD);
+        level.clockManager().setTotalTicks(clock, ticks);
     }
 
     private static void bloodMoonPulse(
