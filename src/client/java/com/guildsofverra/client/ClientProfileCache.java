@@ -18,6 +18,11 @@ public final class ClientProfileCache {
         revision++;
     }
 
+    public static void clear() {
+        profile = new JsonObject();
+        revision++;
+    }
+
     public static JsonObject profile() {
         return profile;
     }
