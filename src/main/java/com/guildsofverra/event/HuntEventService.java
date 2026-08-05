@@ -21,6 +21,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.Level;
 
@@ -35,23 +36,23 @@ public final class HuntEventService {
     private static final Map<UUID, Long> COOLDOWN_UNTIL = new HashMap<>();
 
     private static final List<EntityType<? extends Mob>> OVERWORLD_POOL = List.of(
-        EntityType.ZOMBIE,
-        EntityType.SKELETON,
-        EntityType.SPIDER,
-        EntityType.HUSK,
-        EntityType.STRAY,
-        EntityType.PILLAGER,
-        EntityType.CAVE_SPIDER
+        EntityTypes.ZOMBIE,
+        EntityTypes.SKELETON,
+        EntityTypes.SPIDER,
+        EntityTypes.HUSK,
+        EntityTypes.STRAY,
+        EntityTypes.PILLAGER,
+        EntityTypes.CAVE_SPIDER
     );
     private static final List<EntityType<? extends Mob>> NETHER_POOL = List.of(
-        EntityType.WITHER_SKELETON,
-        EntityType.PIGLIN_BRUTE,
-        EntityType.MAGMA_CUBE,
-        EntityType.BLAZE
+        EntityTypes.WITHER_SKELETON,
+        EntityTypes.PIGLIN_BRUTE,
+        EntityTypes.MAGMA_CUBE,
+        EntityTypes.BLAZE
     );
     private static final List<EntityType<? extends Mob>> END_POOL = List.of(
-        EntityType.ENDERMAN,
-        EntityType.ENDERMITE
+        EntityTypes.ENDERMAN,
+        EntityTypes.ENDERMITE
     );
 
     private HuntEventService() {}
