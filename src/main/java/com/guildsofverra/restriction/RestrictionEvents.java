@@ -93,7 +93,10 @@ public final class RestrictionEvents {
             return;
         }
 
-        RequirementResult result = RestrictionService.canEquip(ProfileManager.get(player), equipped);
+        RequirementResult result = RestrictionService.canEquip(
+            ProfileManager.get(player),
+            equipped
+        );
         if (result.allowed()) {
             return;
         }
@@ -106,7 +109,11 @@ public final class RestrictionEvents {
         sendDenial(player, result.reason());
     }
 
-    private static boolean enforce(ServerPlayer player, ItemStack stack, BiFunction<PlayerProfile, ItemStack, RequirementResult> check) {
+    private static boolean enforce(
+        ServerPlayer player,
+        ItemStack stack,
+        BiFunction<PlayerProfile, ItemStack, RequirementResult> check
+    ) {
         RequirementResult result = check.apply(ProfileManager.get(player), stack);
         if (!result.allowed()) {
             sendDenial(player, result.reason());
@@ -117,7 +124,9 @@ public final class RestrictionEvents {
     private static void sendDenial(ServerPlayer player, String reason) {
         long now = System.currentTimeMillis();
         DenialNotice previous = LAST_DENIAL.get(player.getUUID());
-        if (previous != null && previous.reason().equals(reason) && now - previous.timestamp() < DENIAL_COOLDOWN_MILLIS) {
+        if (previous != null
+            && previous.reason().equals(reason)
+            && now - previous.timestamp() < DENIAL_COOLDOWN_MILLIS) {
             return;
         }
 

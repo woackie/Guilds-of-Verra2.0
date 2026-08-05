@@ -10,13 +10,13 @@ import java.util.Set;
 import java.util.UUID;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityLevelChangeEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.levelgen.Heightmap;
 
 public final class DimensionGateEvents {
     private static final int POSITION_HISTORY_TICKS = 60;
@@ -26,7 +26,8 @@ public final class DimensionGateEvents {
 
     private static final SafeReturnHistory<ResourceKey<Level>> RETURN_HISTORY =
         new SafeReturnHistory<>(POSITION_HISTORY_TICKS, SAFE_RETURN_LOOKBACK_TICKS);
-    private static final Map<UUID, Long> RETURN_GUARD_UNTIL = new HashMap<>();
+    private static final Map<UUID, ExpectedDimensionReturn<ResourceKey<Level>>> RETURN_GUARDS =
+        new HashMap<>();
     private static final Map<UUID, PendingReturn> PENDING_RETURNS = new HashMap<>();
     private static final Map<UUID, GateNotice> LAST_NOTICE = new HashMap<>();
 
@@ -42,11 +43,10 @@ public final class DimensionGateEvents {
                 UUID playerId = player.getUUID();
                 onlinePlayers.add(playerId);
 
-                Long guardUntil = RETURN_GUARD_UNTIL.get(playerId);
-                if (guardUntil != null && guardUntil > now) {
-                    continue;
+                ExpectedDimensionReturn<ResourceKey<Level>> guard = RETURN_GUARDS.get(playerId);
+                if (guard != null && guard.isExpired(now)) {
+                    RETURN_GUARDS.remove(playerId);
                 }
-                RETURN_GUARD_UNTIL.remove(playerId);
 
                 RequirementResult currentDimension = DimensionGateService.canEnter(
                     ProfileManager.get(player),
@@ -71,7 +71,7 @@ public final class DimensionGateEvents {
             }
 
             RETURN_HISTORY.retainPlayers(onlinePlayers);
-            RETURN_GUARD_UNTIL.keySet().retainAll(onlinePlayers);
+            RETURN_GUARDS.keySet().retainAll(onlinePlayers);
             PENDING_RETURNS.keySet().retainAll(onlinePlayers);
             LAST_NOTICE.keySet().retainAll(onlinePlayers);
         });
@@ -79,10 +79,12 @@ public final class DimensionGateEvents {
         ServerEntityLevelChangeEvents.AFTER_PLAYER_CHANGE_LEVEL.register((player, origin, destination) -> {
             UUID playerId = player.getUUID();
             long now = System.currentTimeMillis();
-            Long guardUntil = RETURN_GUARD_UNTIL.get(playerId);
-            if (guardUntil != null && guardUntil > now) {
+            ExpectedDimensionReturn<ResourceKey<Level>> guard = RETURN_GUARDS.get(playerId);
+            if (guard != null && guard.matches(destination.dimension(), now)) {
+                RETURN_GUARDS.remove(playerId);
                 return;
             }
+            RETURN_GUARDS.remove(playerId);
 
             RequirementResult result = DimensionGateService.canEnter(
                 ProfileManager.get(player),
@@ -104,7 +106,10 @@ public final class DimensionGateEvents {
             float yaw = returnPoint == null ? player.getYRot() : returnPoint.yaw();
             float pitch = returnPoint == null ? player.getXRot() : returnPoint.pitch();
 
-            RETURN_GUARD_UNTIL.put(playerId, now + RETURN_GUARD_MILLIS);
+            RETURN_GUARDS.put(
+                playerId,
+                new ExpectedDimensionReturn<>(origin.dimension(), now + RETURN_GUARD_MILLIS)
+            );
             PENDING_RETURNS.put(
                 playerId,
                 new PendingReturn(origin, x, y, z, yaw, pitch)
@@ -144,22 +149,19 @@ public final class DimensionGateEvents {
         long now
     ) {
         ServerLevel overworld = server.overworld();
-        int x = 0;
-        int z = 0;
-        int y = overworld.getHeight(
-            Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-            x,
-            z
-        ) + 1;
+        BlockPos spawn = overworld.getRespawnData().pos();
 
-        RETURN_GUARD_UNTIL.put(player.getUUID(), now + RETURN_GUARD_MILLIS);
+        RETURN_GUARDS.put(
+            player.getUUID(),
+            new ExpectedDimensionReturn<>(overworld.dimension(), now + RETURN_GUARD_MILLIS)
+        );
         PENDING_RETURNS.put(
             player.getUUID(),
             new PendingReturn(
                 overworld,
-                x + 0.5,
-                Math.max(overworld.getMinY() + 2, y),
-                z + 0.5,
+                spawn.getX() + 0.5,
+                Math.max(overworld.getMinY() + 2, spawn.getY()),
+                spawn.getZ() + 0.5,
                 player.getYRot(),
                 player.getXRot()
             )
