@@ -1,5 +1,6 @@
 package com.guildsofverra.client;
 
+import com.guildsofverra.network.JournalActionResultPayload;
 import com.guildsofverra.network.ProfileSyncPayload;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
@@ -26,6 +27,16 @@ public final class GuildsOfVerraClient implements ClientModInitializer {
             ProfileSyncPayload.TYPE,
             (payload, context) -> context.client().execute(
                 () -> ClientProfileCache.update(payload.json())
+            )
+        );
+        ClientPlayNetworking.registerGlobalReceiver(
+            JournalActionResultPayload.TYPE,
+            (payload, context) -> context.client().execute(
+                () -> JournalActionFeedback.update(
+                    payload.action(),
+                    payload.success(),
+                    payload.message()
+                )
             )
         );
 
