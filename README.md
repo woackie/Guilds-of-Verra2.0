@@ -4,13 +4,11 @@ A lightweight, standalone, configurable Fabric progression mod for Minecraft Jav
 
 ## Current snapshot
 
-`0.1.0-dev.1` is the first full repository foundation. It includes the complete data model,
-all five 100-point skill trees, XP curves, player persistence through Fabric Data Attachments,
-server-authoritative networking, administrative commands, hard-lock rule definitions,
-dimension requirements, prestige definitions, discovery/title data, elite-mob definitions,
-a basic journal client, validation scripts and automated core tests.
+`0.1.0-dev.3` expands the working dev.2 foundation with complete Fishing and Cooking progression loops, configurable XP rewards, the first functional purchased-node passives, clearer progression feedback and an improved journal with XP bars and point totals.
 
-See [DEVELOPMENT_STATUS.md](DEVELOPMENT_STATUS.md) for the exact implementation status.
+The project also includes all five 100-point skill trees, persistent player profiles, server-authoritative networking, administrative commands, hard equipment locks, dimension requirements, prestige, discoveries, titles and vanilla-themed elite foundations.
+
+See [DEVELOPMENT_STATUS.md](DEVELOPMENT_STATUS.md) for exact implementation and runtime-verification status. Use [TESTING_CHECKLIST.md](TESTING_CHECKLIST.md) for the dev.3 playtest.
 
 ## Requirements
 
@@ -18,6 +16,16 @@ See [DEVELOPMENT_STATUS.md](DEVELOPMENT_STATUS.md) for the exact implementation 
 - Fabric Loader 0.19.3 or newer compatible release
 - Fabric API 0.156.0+26.2
 - Java Development Kit 25
+
+## Runtime configuration
+
+The mod generates:
+
+```text
+config/guildsofverra/progression.json
+```
+
+This controls Mining, Fishing, Cooking, Combat and Exploration rewards plus progression-message settings. Restart Minecraft after editing the file.
 
 ## Build
 
@@ -33,7 +41,7 @@ Linux/macOS:
 ./gradlew build
 ```
 
-The remapped mod JAR will be written to `build/libs/`.
+The remapped mod JAR is written to `build/libs/`.
 
 ## Development run
 
@@ -43,8 +51,6 @@ The remapped mod JAR will be written to `build/libs/`.
 ```
 
 ## Core validation without Minecraft dependencies
-
-The repository contains a dependency-free progression core. Run:
 
 ```sh
 python scripts/validate_project.py
