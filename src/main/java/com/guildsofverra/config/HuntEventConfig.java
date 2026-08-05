@@ -19,7 +19,7 @@ public final class HuntEventConfig {
     public int minimumAdventurerLevel = 15;
     public int checkIntervalSeconds = 30;
     public double triggerChancePerCheck = 0.015;
-    public int playerCooldownMinutes = 45;
+    public int playerCooldownMinutes = 60;
     public int globalActiveHuntCap = 2;
 
     public int minimumPackSize = 5;
