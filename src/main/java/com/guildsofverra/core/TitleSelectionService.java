@@ -6,6 +6,9 @@ public final class TitleSelectionService {
     public static PurchaseResult select(PlayerProfile profile, String titleId) {
         String normalized = titleId == null ? "" : titleId.trim();
         if (normalized.isEmpty()) {
+            if (profile.selectedTitle().isEmpty()) {
+                return PurchaseResult.failure(profile, "No active title to clear");
+            }
             return PurchaseResult.success(profile.withSelectedTitle(""), "Active title cleared");
         }
         if (!profile.titles().contains(normalized)) {
