@@ -6,12 +6,20 @@ import com.guildsofverra.core.SkillId;
 import com.guildsofverra.core.SkillNodeDefinition;
 import com.guildsofverra.core.SkillTreeDefinition;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /** Server-derived journal summaries that keep the client free of duplicated progression rules. */
 public final class JournalSummaryService {
+    private static final Set<String> ACTIVE_BONUS_TYPES = Set.of(
+        "ore_xp",
+        "extra_fish",
+        "extra_cooked_output"
+    );
+
     private static final List<GateDefinition> EQUIPMENT_GATES = List.of(
         new GateDefinition("iron_tools", "mining:iron_tool_mastery"),
         new GateDefinition("diamond_tools", "mining:diamond_tool_mastery"),
@@ -33,6 +41,7 @@ public final class JournalSummaryService {
 
     private JournalSummaryService() {}
 
+    /** Returns only purchased bonuses that currently have a runtime gameplay implementation. */
     public static Map<String, Double> passiveBonuses(
         PlayerProfile profile,
         SkillId skill,
@@ -54,9 +63,12 @@ public final class JournalSummaryService {
                 continue;
             }
             String bonusType = String.valueOf(type);
+            if (!ACTIVE_BONUS_TYPES.contains(bonusType)) {
+                continue;
+            }
             totals.merge(bonusType, number.doubleValue(), Double::sum);
         }
-        return Map.copyOf(totals);
+        return Collections.unmodifiableMap(new LinkedHashMap<>(totals));
     }
 
     public static List<EquipmentGate> equipmentGates(PlayerProfile profile) {
