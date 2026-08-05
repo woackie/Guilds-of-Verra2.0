@@ -53,4 +53,20 @@ class TitleSelectionServiceTest {
         assertTrue(cleared.success());
         assertEquals("", cleared.profile().selectedTitle());
     }
+
+    @Test
+    void rejectsClearingWhenNoTitleIsActive() {
+        PlayerProfile profile = new PlayerProfile(
+            PlayerProfile.SCHEMA_VERSION,
+            Map.of(),
+            Set.of(),
+            Set.of(),
+            Set.of("guildsofverra:elite_hunter"),
+            ""
+        );
+
+        PurchaseResult result = TitleSelectionService.select(profile, "");
+        assertFalse(result.success());
+        assertEquals("", result.profile().selectedTitle());
+    }
 }
