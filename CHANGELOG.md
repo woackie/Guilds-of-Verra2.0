@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.1.0-dev.6 — Expanded Encounters
+
+- Expanded the vanilla-themed elite roster from seven to exactly twenty-five variants.
+- Added Plague Husk, Frostbound Stray, Hexbinder Witch, Raid Captain Pillager and Ironhide Ravager.
+- Added Berserker Piglin, Ashen Wither Skeleton, Magma Colossus and End-only Voidstalker Enderman.
+- Added Sporeguard Bogged, Cave Stalker, Tempest Breeze and Swarmheart Silverfish.
+- Added Cinder Blaze, Soulreaver Ghast, End Sentinel Shulker, Abyssal Guardian and Dreadwing Phantom.
+- Added a central deterministic elite registry with unique-ID and vanilla-entity coverage tests.
+- Preserved Adventurer-level scaling, nearby/regional spawn budgets and reward calculations for every variant.
+- Added configurable Poison, Slowness, Blindness, Levitation, Weakness, Wither, Darkness, Mining Fatigue, freezing and fire identities.
+- Added role equipment for humanoid expansion variants.
+- Extended automatic bestiary discoveries and first-discovery Exploration XP to all twenty-five variants.
+- Restricted Voidstalker Endermen to the End while preserving ordinary Endermen elsewhere.
+- Added a complete natural-spawn, ability, balance, bestiary and performance runtime checklist.
+- Updated build and synchronized version identity to `0.1.0-dev.6`.
+
 ## 0.1.0-dev.5 — Interactive Journal & Collections
 
 - Added clickable Overview, five skill, Collections, Gates and Unlocks journal tabs.
