@@ -1,6 +1,7 @@
 package com.guildsofverra.event;
 
 import com.guildsofverra.api.GuildsOfVerraApi;
+import com.guildsofverra.config.EliteConfig;
 import com.guildsofverra.config.ProgressionConfig;
 import com.guildsofverra.content.GvContent;
 import com.guildsofverra.core.PassiveBonusService;
@@ -9,6 +10,7 @@ import com.guildsofverra.core.ProgressionChange;
 import com.guildsofverra.core.SkillId;
 import com.guildsofverra.data.ProfileManager;
 import com.guildsofverra.elite.EliteMobService;
+import com.guildsofverra.elite.EliteVariantDefinition;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -18,6 +20,7 @@ import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
 
 public final class ProgressionEvents {
     private static final Map<UUID, Long> LAST_EXPLORATION_CELL = new HashMap<>();
@@ -55,6 +58,12 @@ public final class ProgressionEvents {
 
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
             if (!(source.getEntity() instanceof ServerPlayer player) || entity == player) return;
+
+            boolean elite = EliteMobService.isElite(entity);
+            if (elite) {
+                unlockEliteDiscovery(player, entity);
+            }
+
             double rewardAdjustment = EliteMobService.combatRewardAdjustment(entity);
             long bonus = Math.max(1L, Math.round(
                 entity.getMaxHealth()
@@ -65,7 +74,7 @@ public final class ProgressionEvents {
                 player,
                 SkillId.COMBAT,
                 bonus,
-                EliteMobService.isElite(entity) ? "Elite defeated" : "Enemy defeated",
+                elite ? "Elite defeated" : "Enemy defeated",
                 false
             );
         });
@@ -90,6 +99,34 @@ public final class ProgressionEvents {
             }
             StatProgressionTracker.tick(server.getPlayerList().getPlayers());
         });
+    }
+
+    private static void unlockEliteDiscovery(ServerPlayer player, LivingEntity elite) {
+        String variantId = EliteMobService.variantId(elite);
+        String discoveryId = EliteMobService.discoveryId(variantId);
+        if (discoveryId.isBlank() || ProfileManager.get(player).discoveries().contains(discoveryId)) {
+            return;
+        }
+
+        EliteVariantDefinition variant = EliteMobService.variant(variantId);
+        String displayName = variant == null ? variantId : variant.displayName();
+        ProfileManager.update(player, profile -> profile.withDiscovery(discoveryId));
+
+        EliteConfig config = EliteConfig.current();
+        if (config.announceFirstDiscovery) {
+            player.sendSystemMessage(Component.literal(
+                "Bestiary discovery — " + displayName
+            ));
+        }
+        if (config.firstDiscoveryExplorationXp > 0) {
+            awardAndNotify(
+                player,
+                SkillId.EXPLORATION,
+                config.firstDiscoveryExplorationXp,
+                "First elite encounter: " + displayName,
+                true
+            );
+        }
     }
 
     static ProgressionChange awardAndNotify(
