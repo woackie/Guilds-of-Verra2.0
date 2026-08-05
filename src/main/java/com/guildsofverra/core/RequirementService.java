@@ -1,5 +1,7 @@
 package com.guildsofverra.core;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public final class RequirementService {
@@ -35,16 +37,22 @@ public final class RequirementService {
         int adventurer,
         Map<SkillId, Integer> skillLevels
     ) {
-        RequirementResult overall = requireAdventurer(profile, adventurer);
-        if (!overall.allowed()) {
-            return overall;
-        }
+        List<String> missing = new ArrayList<>();
+        addMissing(missing, requireAdventurer(profile, adventurer));
         for (Map.Entry<SkillId, Integer> entry : skillLevels.entrySet()) {
-            RequirementResult result = requireSkill(profile, entry.getKey(), entry.getValue());
-            if (!result.allowed()) {
-                return result;
-            }
+            addMissing(missing, requireSkill(profile, entry.getKey(), entry.getValue()));
         }
-        return RequirementResult.allow();
+
+        return missing.isEmpty()
+            ? RequirementResult.allow()
+            : RequirementResult.deny("Requires " + String.join(", ", missing));
+    }
+
+    private static void addMissing(List<String> missing, RequirementResult result) {
+        if (result.allowed()) {
+            return;
+        }
+        String reason = result.reason();
+        missing.add(reason.startsWith("Requires ") ? reason.substring("Requires ".length()) : reason);
     }
 }
