@@ -58,8 +58,7 @@ public final class EliteMobService {
             EliteConfig config = EliteConfig.current();
             if (!config.enabled
                 || !(entity instanceof LivingEntity living)
-                || living instanceof ServerPlayer
-                || entity.tickCount > 1) {
+                || living instanceof ServerPlayer) {
                 return;
             }
 
