@@ -104,13 +104,14 @@ public final class ProgressionEvents {
     private static void unlockEliteDiscovery(ServerPlayer player, LivingEntity elite) {
         String variantId = EliteMobService.variantId(elite);
         String discoveryId = EliteMobService.discoveryId(variantId);
-        if (discoveryId.isBlank() || ProfileManager.get(player).discoveries().contains(discoveryId)) {
+        PlayerProfile profile = ProfileManager.get(player);
+        if (discoveryId.isBlank() || profile.discoveries().contains(discoveryId)) {
             return;
         }
 
         EliteVariantDefinition variant = EliteMobService.variant(variantId);
         String displayName = variant == null ? variantId : variant.displayName();
-        ProfileManager.update(player, profile -> profile.withDiscovery(discoveryId));
+        ProfileManager.update(player, current -> current.withDiscovery(discoveryId));
 
         EliteConfig config = EliteConfig.current();
         if (config.announceFirstDiscovery) {
@@ -119,10 +120,19 @@ public final class ProgressionEvents {
             ));
         }
         if (config.firstDiscoveryExplorationXp > 0) {
+            double discoveryBonus = PassiveBonusService.total(
+                profile,
+                SkillId.EXPLORATION,
+                GvContent.tree(SkillId.EXPLORATION),
+                "discovery_xp"
+            );
             awardAndNotify(
                 player,
                 SkillId.EXPLORATION,
-                config.firstDiscoveryExplorationXp,
+                PassiveBonusService.applyPositiveMultiplier(
+                    config.firstDiscoveryExplorationXp,
+                    discoveryBonus
+                ),
                 "First elite encounter: " + displayName,
                 true
             );

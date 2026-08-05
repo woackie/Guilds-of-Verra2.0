@@ -86,6 +86,36 @@ class JournalSummaryServiceTest {
         );
     }
 
+    @Test
+    void includesRuntimePassivesButKeepsMapRadiusDeferred() {
+        SkillTreeDefinition exploration = new SkillTreeDefinition(
+            SkillId.EXPLORATION,
+            100,
+            1,
+            List.of(
+                node("speed", "movement_speed", 0.05),
+                node("maps", "map_radius", 0.20)
+            )
+        );
+        PlayerProfile profile = new PlayerProfile(
+            PlayerProfile.SCHEMA_VERSION,
+            Map.of(),
+            Set.of("exploration:speed", "exploration:maps"),
+            Set.of(),
+            Set.of(),
+            ""
+        );
+
+        assertEquals(
+            Map.of("movement_speed", 0.05),
+            JournalSummaryService.passiveBonuses(
+                profile,
+                SkillId.EXPLORATION,
+                exploration
+            )
+        );
+    }
+
     private static SkillNodeDefinition node(String id, String type, double value) {
         return new SkillNodeDefinition(
             id,

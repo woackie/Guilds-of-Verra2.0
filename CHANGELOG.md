@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.1.0-dev.7 — Functional Skill Passives
+
+- Added a server-authoritative runtime layer for purchased passive skill nodes.
+- Activated Exploration movement speed, travel exhaustion, fall damage, swim speed, air supply and discovery-XP bonuses.
+- Activated Fishing wait time, rod preservation, treasure output, junk suppression and aquatic-drop bonuses while preserving extra-fish rewards.
+- Activated Cooking saturation, representative ingredient preservation, positive/negative food-effect duration and eating-speed bonuses while preserving extra cooked output.
+- Activated Mining speed, tool preservation, common-resource drops and underground fall/explosion resistance while preserving ore-XP bonuses.
+- Activated Combat maximum health, incoming-damage resistance, sword/axe/projectile damage and shield preservation.
+- Added the advertised sword sweeping, ranged draw/reload and blocking knockback companion effects.
+- Added narrow mixins for damage input, durability requests, food completion, air supply, exhaustion and fishing wait countdowns.
+- Added transient attribute modifiers so passive bonuses do not overwrite vanilla or other-mod base values.
+- Expanded synchronized journal passive summaries from three active bonus types to twenty-nine.
+- Kept `map_radius` explicitly inactive until a real exploration-map/discovery-radius system is implemented.
+- Added `/gv test master-skill <player> <skill>` for rapid deterministic playtesting.
+- Added clamped passive-runtime math tests and a focused dev.7 playtest guide.
+- Updated synchronized version identity to `0.1.0-dev.7`.
+
 ## 0.1.0-dev.6 — Expanded Encounters
 
 - Expanded the vanilla-themed elite roster from seven to exactly twenty-five variants.

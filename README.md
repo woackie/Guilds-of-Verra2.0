@@ -4,17 +4,13 @@ A lightweight, standalone, configurable Fabric progression mod for Minecraft Jav
 
 ## Current snapshot
 
-`0.1.0-dev.5` remains the frozen interactive-journal test candidate stacked on the verified dev.4 gate and elite foundation.
+`main` is promoted and runtime-approved through `0.1.0-dev.6`: core progression, hard gates, the interactive journal, twenty-five elites, Hunt Events and seven world events.
 
-The stacked `0.1.0-dev.6` development branch expands encounters to twenty-five vanilla-themed elite variants, adds configurable player-targeted Hunt Events, and adds seven mutually-exclusive survival world events: Blood Moon, Severe Thunderstorm, Cave Tremor, Nether Surge, Predator Migration, Long Night and Restless Dead.
+The `0.1.0-dev.7` candidate makes purchased skill nodes affect real gameplay. Twenty-nine of the thirty declared passive types now have server-authoritative handlers for attributes, damage, durability, food, effects, fishing, loot and discovery rewards. `map_radius` remains deliberately inactive until the exploration/discovery map system exists, rather than pretending to modify vanilla maps incorrectly.
 
-Hunt Events warn an eligible player, spawn a scaled hostile pack farther away, repeatedly retarget the selected player, and clean up safely after victory, timeout, death, disconnect, dimension changes or server shutdown. World events use a separate server-wide scheduler, never overlap one another, and create combat, weather, underground, dimension and time-of-day pressure without modifying the frozen dev.5 artifact.
+The underlying mod includes all five 100-point skill trees, persistent player profiles, Mining/Combat/Exploration/Fishing/Cooking progression, hard equipment and dimension locks, configurable elite encounters, discoveries, titles, an interactive journal and administrative testing commands.
 
-The underlying mod includes all five 100-point skill trees, persistent player profiles, Mining/Combat/Exploration/Fishing/Cooking progression, purchased-node passives, hard equipment locks, safe dimension gates, configurable elite encounters, discoveries, titles, an interactive journal and administrative commands.
-
-`main` remains the latest promoted playable build. Dev.5 remains the prepared runtime-test candidate; dev.6 remains stacked on dev.5 and must not replace the frozen dev.5 artifact during its testing session.
-
-See [DEVELOPMENT_STATUS.md](DEVELOPMENT_STATUS.md) for exact implementation status. Use [TESTING_CHECKLIST.md](TESTING_CHECKLIST.md) for the prioritized dev.5 playtest, [RUNTIME_TEST_REPORT.md](RUNTIME_TEST_REPORT.md) to record problems consistently, [MILESTONE_DEV_6.md](MILESTONE_DEV_6.md) for the dev.6 scope, and [WORLD_EVENT_TESTING.md](WORLD_EVENT_TESTING.md) for the rapid seven-event test setup.
+See [DEVELOPMENT_STATUS.md](DEVELOPMENT_STATUS.md) for exact implementation status, [MILESTONE_DEV_7.md](MILESTONE_DEV_7.md) for the passive-runtime scope, and [PASSIVE_TESTING.md](PASSIVE_TESTING.md) for the focused dev.7 playtest. Earlier encounter checks remain in [MILESTONE_DEV_6.md](MILESTONE_DEV_6.md) and [WORLD_EVENT_TESTING.md](WORLD_EVENT_TESTING.md).
 
 ## Requirements
 
@@ -54,12 +50,15 @@ the natural schedulers. These commands require operator permission level 2:
 /gv hunt stop <player>
 /gv hunt status <player>
 /gv elite spawn <variant> [count]
+/gv test master-skill <player> <skill>
 ```
 
 Event and elite IDs autocomplete in chat. Manual world events start immediately and still
 use the normal effects, duration and cleanup. A manual Hunt Event keeps its configured warning
 delay. Manually spawned elites use the executing player's Adventurer Level scaling while
 bypassing natural rarity and elite-population caps.
+
+`/gv test master-skill` raises one skill to level 100 and purchases its complete tree. It is intended for deterministic development-build testing; `/gv reset <player>` restores a blank profile.
 
 ## Journal controls
 
