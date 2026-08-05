@@ -1,6 +1,7 @@
 package com.guildsofverra;
 
 import com.guildsofverra.command.GvCommands;
+import com.guildsofverra.config.EliteConfig;
 import com.guildsofverra.config.ProgressionConfig;
 import com.guildsofverra.content.GvContent;
 import com.guildsofverra.data.GvAttachments;
@@ -21,6 +22,7 @@ public final class GuildsOfVerra implements ModInitializer {
     @Override public void onInitialize() {
         GvContent.initialize();
         ProgressionConfig.initialize();
+        EliteConfig.initialize();
         GvAttachments.initialize();
         GvNetworking.initialize();
         GvCommands.initialize();
