@@ -7,6 +7,7 @@ import com.guildsofverra.core.SkillId;
 import com.guildsofverra.core.SkillNodeDefinition;
 import com.guildsofverra.core.SkillTreeDefinition;
 import com.guildsofverra.core.XpCurve;
+import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
@@ -22,12 +23,20 @@ public final class JournalScreen extends Screen {
         "combat"
     };
     private static final int NODE_ROWS_PER_PAGE = 8;
+    private static final long PURCHASE_PENDING_MILLIS = 3_000L;
+    private static final long STATUS_MESSAGE_MILLIS = 2_500L;
 
+    private final List<Button> nodeButtons = new ArrayList<>();
     private View view = View.OVERVIEW;
     private String selectedSkill = "exploration";
     private int nodePage;
     private Button previousNodes;
     private Button nextNodes;
+    private String pendingNodeId = "";
+    private long pendingUntil;
+    private long seenProfileRevision;
+    private String actionStatus = "";
+    private long actionStatusUntil;
 
     public JournalScreen() {
         super(Component.translatable("screen.guildsofverra.journal"));
@@ -41,6 +50,9 @@ public final class JournalScreen extends Screen {
         int y = (height - panelHeight) / 2;
         int tabY = y + 42;
         int tabX = x + 16;
+
+        seenProfileRevision = ClientProfileCache.revision();
+        nodeButtons.clear();
 
         tabX = addTab("Overview", tabX, tabY, 72, () -> selectView(View.OVERVIEW));
         for (String skill : SKILLS) {
@@ -60,7 +72,24 @@ public final class JournalScreen extends Screen {
                 .bounds(x + panelWidth - 102, y + panelHeight - 46, 82, 20)
                 .build()
         );
+
+        int nodeButtonX = x + panelWidth - 126;
+        int firstNodeButtonY = y + 107;
+        for (int row = 0; row < NODE_ROWS_PER_PAGE; row++) {
+            final int visibleRow = row;
+            Button nodeButton = addRenderableWidget(
+                Button.builder(
+                    Component.literal("Locked"),
+                    button -> purchaseNodeAt(visibleRow)
+                )
+                    .bounds(nodeButtonX, firstNodeButtonY + row * 34, 92, 20)
+                    .build()
+            );
+            nodeButtons.add(nodeButton);
+        }
+
         updatePagingButtons();
+        updateNodeButtons();
     }
 
     private int addTab(String label, int x, int y, int width, Runnable action) {
@@ -75,7 +104,9 @@ public final class JournalScreen extends Screen {
     private void selectView(View next) {
         view = next;
         nodePage = 0;
+        pendingNodeId = "";
         updatePagingButtons();
+        updateNodeButtons();
     }
 
     private void selectSkill(String skill) {
@@ -85,7 +116,9 @@ public final class JournalScreen extends Screen {
 
     private void changeNodePage(int delta) {
         nodePage = Math.max(0, Math.min(maxNodePage(), nodePage + delta));
+        pendingNodeId = "";
         updatePagingButtons();
+        updateNodeButtons();
     }
 
     private void updatePagingButtons() {
@@ -99,6 +132,59 @@ public final class JournalScreen extends Screen {
         nextNodes.active = skillView && nodePage < maxNodePage();
     }
 
+    private void updateNodeButtons() {
+        SkillTreeDefinition tree = selectedTree();
+        int firstNode = nodePage * NODE_ROWS_PER_PAGE;
+
+        for (int row = 0; row < nodeButtons.size(); row++) {
+            Button button = nodeButtons.get(row);
+            int nodeIndex = firstNode + row;
+            boolean visible = view == View.SKILL
+                && tree != null
+                && nodeIndex < tree.nodes().size();
+            button.visible = visible;
+
+            if (!visible) {
+                button.active = false;
+                continue;
+            }
+
+            SkillNodeDefinition node = tree.nodes().get(nodeIndex);
+            String fullNodeId = selectedSkill + ":" + node.id();
+            NodeState state = nodeState(node);
+            boolean pending = fullNodeId.equals(pendingNodeId)
+                && System.currentTimeMillis() < pendingUntil;
+
+            button.setMessage(Component.literal(pending ? "Pending…" : buttonLabel(state, node)));
+            button.active = state == NodeState.PURCHASABLE && !pending;
+        }
+    }
+
+    private void purchaseNodeAt(int visibleRow) {
+        SkillTreeDefinition tree = selectedTree();
+        int nodeIndex = nodePage * NODE_ROWS_PER_PAGE + visibleRow;
+        if (view != View.SKILL || tree == null || nodeIndex >= tree.nodes().size()) {
+            return;
+        }
+
+        SkillNodeDefinition node = tree.nodes().get(nodeIndex);
+        if (nodeState(node) != NodeState.PURCHASABLE || !pendingNodeId.isBlank()) {
+            return;
+        }
+
+        if (JournalClientActions.purchaseNode(selectedSkill, node.id())) {
+            long now = System.currentTimeMillis();
+            pendingNodeId = selectedSkill + ":" + node.id();
+            pendingUntil = now + PURCHASE_PENDING_MILLIS;
+            actionStatus = "Purchase request sent — " + readable(node.id());
+            actionStatusUntil = now + STATUS_MESSAGE_MILLIS;
+        } else {
+            actionStatus = "Purchase request unavailable.";
+            actionStatusUntil = System.currentTimeMillis() + STATUS_MESSAGE_MILLIS;
+        }
+        updateNodeButtons();
+    }
+
     private int maxNodePage() {
         if (view != View.SKILL) {
             return 0;
@@ -109,6 +195,8 @@ public final class JournalScreen extends Screen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+        refreshActionState();
+
         int panelWidth = panelWidth();
         int panelHeight = panelHeight();
         int x = (width - panelWidth) / 2;
@@ -146,6 +234,35 @@ public final class JournalScreen extends Screen {
             case SKILL -> drawSkillView(graphics, contentX, contentY, contentWidth);
             case COLLECTIONS -> drawCollections(graphics, contentX, contentY, contentWidth);
             case GATES -> drawGates(graphics, contentX, contentY, contentWidth);
+        }
+    }
+
+    private void refreshActionState() {
+        long now = System.currentTimeMillis();
+        long revision = ClientProfileCache.revision();
+        if (revision != seenProfileRevision) {
+            boolean purchased = !pendingNodeId.isBlank()
+                && ClientProfileCache.hasNode(pendingNodeId);
+            if (!pendingNodeId.isBlank()) {
+                actionStatus = purchased
+                    ? "Purchase confirmed — " + readable(pendingNodeId)
+                    : "Profile synchronized.";
+                actionStatusUntil = now + STATUS_MESSAGE_MILLIS;
+            }
+            pendingNodeId = "";
+            pendingUntil = 0L;
+            seenProfileRevision = revision;
+            updateNodeButtons();
+        } else if (!pendingNodeId.isBlank() && now >= pendingUntil) {
+            pendingNodeId = "";
+            pendingUntil = 0L;
+            actionStatus = "No purchase confirmation received — check chat feedback.";
+            actionStatusUntil = now + STATUS_MESSAGE_MILLIS;
+            updateNodeButtons();
+        }
+
+        if (!actionStatus.isBlank() && now >= actionStatusUntil) {
+            actionStatus = "";
         }
     }
 
@@ -203,7 +320,7 @@ public final class JournalScreen extends Screen {
         int end = Math.min(tree.nodes().size(), start + NODE_ROWS_PER_PAGE);
         int rowY = y + 24;
         for (int index = start; index < end; index++) {
-            drawNodeRow(graphics, tree.nodes().get(index), x, rowY, width, level, available);
+            drawNodeRow(graphics, tree.nodes().get(index), x, rowY, width);
             rowY += 34;
         }
 
@@ -216,6 +333,9 @@ public final class JournalScreen extends Screen {
             0xFF9DA8A2,
             false
         );
+        if (!actionStatus.isBlank()) {
+            graphics.text(font, actionStatus, x, y + 302, 0xFFE4C775, false);
+        }
     }
 
     private void drawNodeRow(
@@ -223,45 +343,29 @@ public final class JournalScreen extends Screen {
         SkillNodeDefinition node,
         int x,
         int y,
-        int width,
-        int level,
-        int availablePoints
+        int width
     ) {
-        String fullId = selectedSkill + ":" + node.id();
-        boolean purchased = ClientProfileCache.hasNode(fullId);
-        boolean prerequisitesMet = node.prerequisites().stream()
-            .allMatch(required -> ClientProfileCache.hasNode(selectedSkill + ":" + required));
-
-        String state;
-        int color;
-        if (purchased) {
-            state = "PURCHASED";
-            color = 0xFF82C98B;
-        } else if (level < node.minLevel()) {
-            state = "LEVEL " + node.minLevel();
-            color = 0xFF8D9691;
-        } else if (!prerequisitesMet) {
-            state = "PREREQUISITE";
-            color = 0xFFD19A62;
-        } else if (availablePoints < node.cost()) {
-            state = "NEED " + node.cost() + " POINTS";
-            color = 0xFFD19A62;
-        } else {
-            state = "PURCHASABLE";
-            color = 0xFFE4C775;
-        }
+        NodeState state = nodeState(node);
+        boolean purchased = state == NodeState.PURCHASED;
 
         graphics.fill(x, y, x + width, y + 30, purchased ? 0xA02E4935 : 0x9A29312D);
         graphics.text(font, readable(node.id()), x + 8, y + 5, 0xFFF0F0E8, false);
         graphics.text(
             font,
-            ellipsize(node.effect(), 72),
+            ellipsize(node.effect(), 48),
             x + 180,
             y + 5,
             0xFFB8C5BE,
             false
         );
-        graphics.text(font, state, x + width - 112, y + 5, color, false);
+        graphics.text(
+            font,
+            stateLabel(state, node),
+            x + width - 265,
+            y + 17,
+            stateColor(state),
+            false
+        );
         graphics.text(
             font,
             "Cost " + node.cost() + " • " + node.category(),
@@ -270,6 +374,54 @@ public final class JournalScreen extends Screen {
             0xFF9DA8A2,
             false
         );
+    }
+
+    private NodeState nodeState(SkillNodeDefinition node) {
+        String fullId = selectedSkill + ":" + node.id();
+        if (ClientProfileCache.hasNode(fullId)) {
+            return NodeState.PURCHASED;
+        }
+        if (ClientProfileCache.level(selectedSkill) < node.minLevel()) {
+            return NodeState.LEVEL_LOCKED;
+        }
+        boolean prerequisitesMet = node.prerequisites().stream()
+            .allMatch(required -> ClientProfileCache.hasNode(selectedSkill + ":" + required));
+        if (!prerequisitesMet) {
+            return NodeState.PREREQUISITE_LOCKED;
+        }
+        if (ClientProfileCache.availablePoints(selectedSkill) < node.cost()) {
+            return NodeState.POINTS_LOCKED;
+        }
+        return NodeState.PURCHASABLE;
+    }
+
+    private static String stateLabel(NodeState state, SkillNodeDefinition node) {
+        return switch (state) {
+            case PURCHASED -> "Purchased";
+            case LEVEL_LOCKED -> "Requires level " + node.minLevel();
+            case PREREQUISITE_LOCKED -> "Missing prerequisite";
+            case POINTS_LOCKED -> "Requires " + node.cost() + " points";
+            case PURCHASABLE -> "Ready to purchase";
+        };
+    }
+
+    private static String buttonLabel(NodeState state, SkillNodeDefinition node) {
+        return switch (state) {
+            case PURCHASED -> "Owned";
+            case LEVEL_LOCKED -> "Lv " + node.minLevel();
+            case PREREQUISITE_LOCKED -> "Prerequisite";
+            case POINTS_LOCKED -> "Need " + node.cost();
+            case PURCHASABLE -> "Purchase";
+        };
+    }
+
+    private static int stateColor(NodeState state) {
+        return switch (state) {
+            case PURCHASED -> 0xFF82C98B;
+            case LEVEL_LOCKED -> 0xFF8D9691;
+            case PREREQUISITE_LOCKED, POINTS_LOCKED -> 0xFFD19A62;
+            case PURCHASABLE -> 0xFFE4C775;
+        };
     }
 
     private void drawCollections(GuiGraphicsExtractor graphics, int x, int y, int width) {
@@ -517,5 +669,13 @@ public final class JournalScreen extends Screen {
         SKILL,
         COLLECTIONS,
         GATES
+    }
+
+    private enum NodeState {
+        PURCHASED,
+        LEVEL_LOCKED,
+        PREREQUISITE_LOCKED,
+        POINTS_LOCKED,
+        PURCHASABLE
     }
 }
