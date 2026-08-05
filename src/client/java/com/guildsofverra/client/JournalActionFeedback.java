@@ -14,6 +14,10 @@ public final class JournalActionFeedback {
         );
     }
 
+    public static void clear() {
+        snapshot = new Snapshot(snapshot.revision() + 1L, "", false, "");
+    }
+
     public static Snapshot snapshot() {
         return snapshot;
     }
