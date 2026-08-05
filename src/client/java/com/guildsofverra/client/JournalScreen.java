@@ -23,7 +23,9 @@ public final class JournalScreen extends Screen {
         "combat"
     };
     private static final int NODE_ROWS_PER_PAGE = 8;
-    private static final long PURCHASE_PENDING_MILLIS = 3_000L;
+    private static final int MAX_PRESTIGE = 5;
+    private static final long ACTION_PENDING_MILLIS = 3_000L;
+    private static final long PRESTIGE_CONFIRM_MILLIS = 5_000L;
     private static final long STATUS_MESSAGE_MILLIS = 2_500L;
 
     private final List<Button> nodeButtons = new ArrayList<>();
@@ -32,8 +34,16 @@ public final class JournalScreen extends Screen {
     private int nodePage;
     private Button previousNodes;
     private Button nextNodes;
+    private Button prestigeButton;
+
     private String pendingNodeId = "";
-    private long pendingUntil;
+    private long pendingNodeUntil;
+    private String pendingPrestigeSkill = "";
+    private int pendingPrestigeFromRank;
+    private long pendingPrestigeUntil;
+    private String confirmPrestigeSkill = "";
+    private long confirmPrestigeUntil;
+
     private long seenProfileRevision;
     private String actionStatus = "";
     private long actionStatusUntil;
@@ -67,6 +77,11 @@ public final class JournalScreen extends Screen {
                 .bounds(x + 20, y + panelHeight - 46, 82, 20)
                 .build()
         );
+        prestigeButton = addRenderableWidget(
+            Button.builder(Component.literal("Prestige"), button -> handlePrestigeClick())
+                .bounds(x + panelWidth / 2 - 58, y + panelHeight - 46, 116, 20)
+                .build()
+        );
         nextNodes = addRenderableWidget(
             Button.builder(Component.literal("Next"), button -> changeNodePage(1))
                 .bounds(x + panelWidth - 102, y + panelHeight - 46, 82, 20)
@@ -90,6 +105,7 @@ public final class JournalScreen extends Screen {
 
         updatePagingButtons();
         updateNodeButtons();
+        updatePrestigeButton();
     }
 
     private int addTab(String label, int x, int y, int width, Runnable action) {
@@ -105,8 +121,10 @@ public final class JournalScreen extends Screen {
         view = next;
         nodePage = 0;
         pendingNodeId = "";
+        clearPrestigeConfirmation();
         updatePagingButtons();
         updateNodeButtons();
+        updatePrestigeButton();
     }
 
     private void selectSkill(String skill) {
@@ -135,6 +153,7 @@ public final class JournalScreen extends Screen {
     private void updateNodeButtons() {
         SkillTreeDefinition tree = selectedTree();
         int firstNode = nodePage * NODE_ROWS_PER_PAGE;
+        long now = System.currentTimeMillis();
 
         for (int row = 0; row < nodeButtons.size(); row++) {
             Button button = nodeButtons.get(row);
@@ -152,11 +171,48 @@ public final class JournalScreen extends Screen {
             SkillNodeDefinition node = tree.nodes().get(nodeIndex);
             String fullNodeId = selectedSkill + ":" + node.id();
             NodeState state = nodeState(node);
-            boolean pending = fullNodeId.equals(pendingNodeId)
-                && System.currentTimeMillis() < pendingUntil;
+            boolean pending = fullNodeId.equals(pendingNodeId) && now < pendingNodeUntil;
 
             button.setMessage(Component.literal(pending ? "Pending…" : buttonLabel(state, node)));
-            button.active = state == NodeState.PURCHASABLE && !pending;
+            button.active = state == NodeState.PURCHASABLE
+                && !pending
+                && pendingPrestigeSkill.isBlank();
+        }
+    }
+
+    private void updatePrestigeButton() {
+        if (prestigeButton == null) {
+            return;
+        }
+
+        boolean skillView = view == View.SKILL;
+        prestigeButton.visible = skillView;
+        if (!skillView) {
+            prestigeButton.active = false;
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+        int level = ClientProfileCache.level(selectedSkill);
+        int prestige = ClientProfileCache.prestige(selectedSkill);
+        boolean pending = selectedSkill.equals(pendingPrestigeSkill) && now < pendingPrestigeUntil;
+        boolean confirming = selectedSkill.equals(confirmPrestigeSkill) && now < confirmPrestigeUntil;
+
+        if (pending) {
+            prestigeButton.setMessage(Component.literal("Prestiging…"));
+            prestigeButton.active = false;
+        } else if (prestige >= MAX_PRESTIGE) {
+            prestigeButton.setMessage(Component.literal("Prestige Max"));
+            prestigeButton.active = false;
+        } else if (level < XpCurve.MAX_LEVEL) {
+            prestigeButton.setMessage(Component.literal("Prestige at Lv 100"));
+            prestigeButton.active = false;
+        } else if (confirming) {
+            prestigeButton.setMessage(Component.literal("Confirm Prestige"));
+            prestigeButton.active = pendingNodeId.isBlank();
+        } else {
+            prestigeButton.setMessage(Component.literal("Prestige " + (prestige + 1)));
+            prestigeButton.active = pendingNodeId.isBlank();
         }
     }
 
@@ -168,21 +224,65 @@ public final class JournalScreen extends Screen {
         }
 
         SkillNodeDefinition node = tree.nodes().get(nodeIndex);
-        if (nodeState(node) != NodeState.PURCHASABLE || !pendingNodeId.isBlank()) {
+        if (nodeState(node) != NodeState.PURCHASABLE
+            || !pendingNodeId.isBlank()
+            || !pendingPrestigeSkill.isBlank()) {
             return;
         }
 
         if (JournalClientActions.purchaseNode(selectedSkill, node.id())) {
             long now = System.currentTimeMillis();
             pendingNodeId = selectedSkill + ":" + node.id();
-            pendingUntil = now + PURCHASE_PENDING_MILLIS;
+            pendingNodeUntil = now + ACTION_PENDING_MILLIS;
             actionStatus = "Purchase request sent — " + readable(node.id());
             actionStatusUntil = now + STATUS_MESSAGE_MILLIS;
+            clearPrestigeConfirmation();
         } else {
             actionStatus = "Purchase request unavailable.";
             actionStatusUntil = System.currentTimeMillis() + STATUS_MESSAGE_MILLIS;
         }
         updateNodeButtons();
+        updatePrestigeButton();
+    }
+
+    private void handlePrestigeClick() {
+        if (view != View.SKILL
+            || ClientProfileCache.level(selectedSkill) < XpCurve.MAX_LEVEL
+            || ClientProfileCache.prestige(selectedSkill) >= MAX_PRESTIGE
+            || !pendingNodeId.isBlank()
+            || !pendingPrestigeSkill.isBlank()) {
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+        boolean confirmed = selectedSkill.equals(confirmPrestigeSkill) && now < confirmPrestigeUntil;
+        if (!confirmed) {
+            confirmPrestigeSkill = selectedSkill;
+            confirmPrestigeUntil = now + PRESTIGE_CONFIRM_MILLIS;
+            actionStatus = "Prestige resets level and XP; nodes, points and highest level are kept.";
+            actionStatusUntil = confirmPrestigeUntil;
+            updatePrestigeButton();
+            return;
+        }
+
+        if (JournalClientActions.prestigeSkill(selectedSkill)) {
+            pendingPrestigeSkill = selectedSkill;
+            pendingPrestigeFromRank = ClientProfileCache.prestige(selectedSkill);
+            pendingPrestigeUntil = now + ACTION_PENDING_MILLIS;
+            actionStatus = "Prestige request sent — " + readable(selectedSkill);
+            actionStatusUntil = now + STATUS_MESSAGE_MILLIS;
+            clearPrestigeConfirmation();
+        } else {
+            actionStatus = "Prestige request unavailable.";
+            actionStatusUntil = now + STATUS_MESSAGE_MILLIS;
+        }
+        updateNodeButtons();
+        updatePrestigeButton();
+    }
+
+    private void clearPrestigeConfirmation() {
+        confirmPrestigeSkill = "";
+        confirmPrestigeUntil = 0L;
     }
 
     private int maxNodePage() {
@@ -241,29 +341,61 @@ public final class JournalScreen extends Screen {
         long now = System.currentTimeMillis();
         long revision = ClientProfileCache.revision();
         if (revision != seenProfileRevision) {
-            boolean purchased = !pendingNodeId.isBlank()
+            boolean nodePurchased = !pendingNodeId.isBlank()
                 && ClientProfileCache.hasNode(pendingNodeId);
+            boolean prestiged = !pendingPrestigeSkill.isBlank()
+                && ClientProfileCache.prestige(pendingPrestigeSkill) > pendingPrestigeFromRank;
+
             if (!pendingNodeId.isBlank()) {
-                actionStatus = purchased
+                actionStatus = nodePurchased
                     ? "Purchase confirmed — " + readable(pendingNodeId)
                     : "Profile synchronized.";
                 actionStatusUntil = now + STATUS_MESSAGE_MILLIS;
+            } else if (!pendingPrestigeSkill.isBlank()) {
+                actionStatus = prestiged
+                    ? "Prestige confirmed — " + readable(pendingPrestigeSkill)
+                    : "Profile synchronized.";
+                actionStatusUntil = now + STATUS_MESSAGE_MILLIS;
             }
-            pendingNodeId = "";
-            pendingUntil = 0L;
+
+            clearPendingActions();
             seenProfileRevision = revision;
             updateNodeButtons();
-        } else if (!pendingNodeId.isBlank() && now >= pendingUntil) {
-            pendingNodeId = "";
-            pendingUntil = 0L;
-            actionStatus = "No purchase confirmation received — check chat feedback.";
-            actionStatusUntil = now + STATUS_MESSAGE_MILLIS;
-            updateNodeButtons();
+            updatePrestigeButton();
+        } else {
+            if (!pendingNodeId.isBlank() && now >= pendingNodeUntil) {
+                pendingNodeId = "";
+                pendingNodeUntil = 0L;
+                actionStatus = "No purchase confirmation received — check chat feedback.";
+                actionStatusUntil = now + STATUS_MESSAGE_MILLIS;
+                updateNodeButtons();
+                updatePrestigeButton();
+            }
+            if (!pendingPrestigeSkill.isBlank() && now >= pendingPrestigeUntil) {
+                pendingPrestigeSkill = "";
+                pendingPrestigeUntil = 0L;
+                actionStatus = "No prestige confirmation received — check chat feedback.";
+                actionStatusUntil = now + STATUS_MESSAGE_MILLIS;
+                updateNodeButtons();
+                updatePrestigeButton();
+            }
         }
 
+        if (!confirmPrestigeSkill.isBlank() && now >= confirmPrestigeUntil) {
+            clearPrestigeConfirmation();
+            updatePrestigeButton();
+        }
         if (!actionStatus.isBlank() && now >= actionStatusUntil) {
             actionStatus = "";
         }
+    }
+
+    private void clearPendingActions() {
+        pendingNodeId = "";
+        pendingNodeUntil = 0L;
+        pendingPrestigeSkill = "";
+        pendingPrestigeFromRank = 0;
+        pendingPrestigeUntil = 0L;
     }
 
     private void drawOverview(GuiGraphicsExtractor graphics, int x, int y, int width) {
@@ -302,7 +434,7 @@ public final class JournalScreen extends Screen {
         graphics.text(
             font,
             "Level " + level
-                + " • Prestige " + ClientProfileCache.prestige(selectedSkill)
+                + " • Prestige " + ClientProfileCache.prestige(selectedSkill) + "/" + MAX_PRESTIGE
                 + " • " + available + " points available"
                 + " • " + ClientProfileCache.purchasedNodeCount(selectedSkill) + " nodes purchased",
             x + 130,
