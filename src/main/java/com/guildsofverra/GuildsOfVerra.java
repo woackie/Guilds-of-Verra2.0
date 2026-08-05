@@ -1,9 +1,11 @@
 package com.guildsofverra;
 
 import com.guildsofverra.command.GvCommands;
+import com.guildsofverra.config.EliteConfig;
 import com.guildsofverra.config.ProgressionConfig;
 import com.guildsofverra.content.GvContent;
 import com.guildsofverra.data.GvAttachments;
+import com.guildsofverra.elite.EliteAbilityEvents;
 import com.guildsofverra.elite.EliteMobService;
 import com.guildsofverra.event.ProgressionEvents;
 import com.guildsofverra.network.GvNetworking;
@@ -21,6 +23,7 @@ public final class GuildsOfVerra implements ModInitializer {
     @Override public void onInitialize() {
         GvContent.initialize();
         ProgressionConfig.initialize();
+        EliteConfig.initialize();
         GvAttachments.initialize();
         GvNetworking.initialize();
         GvCommands.initialize();
@@ -28,7 +31,8 @@ public final class GuildsOfVerra implements ModInitializer {
         RestrictionEvents.initialize();
         DimensionGateEvents.initialize();
         EliteMobService.initialize();
-        LOGGER.info("Guilds of Verra 0.1.0-dev.3 initialized.");
+        EliteAbilityEvents.initialize();
+        LOGGER.info("Guilds of Verra 0.1.0-dev.4 initialized.");
     }
 
     public static Identifier id(String path) { return Identifier.fromNamespaceAndPath(MOD_ID, path); }
