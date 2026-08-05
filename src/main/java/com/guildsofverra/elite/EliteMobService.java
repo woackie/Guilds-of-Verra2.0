@@ -2,6 +2,7 @@ package com.guildsofverra.elite;
 
 import com.guildsofverra.config.EliteConfig;
 import com.guildsofverra.data.ProfileManager;
+import com.guildsofverra.event.HuntEventService;
 import java.util.Comparator;
 import java.util.List;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
@@ -29,6 +30,7 @@ public final class EliteMobService {
             if (!config.enabled
                 || !(entity instanceof LivingEntity living)
                 || living instanceof ServerPlayer
+                || HuntEventService.isHuntMember(entity)
                 || entity.tickCount > 1) {
                 return;
             }
