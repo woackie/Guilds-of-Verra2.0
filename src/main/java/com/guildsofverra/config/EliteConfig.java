@@ -52,6 +52,22 @@ public final class EliteConfig {
     public float magmaFireSeconds = 5.0F;
     public int voidstalkerBlindnessTicks = 70;
 
+    public int sporeguardPoisonTicks = 80;
+    public int sporeguardSlownessTicks = 70;
+    public int caveStalkerPoisonTicks = 100;
+    public int caveStalkerBlindnessTicks = 45;
+    public int tempestLevitationTicks = 35;
+    public float cinderFireSeconds = 6.0F;
+    public int cinderWeaknessTicks = 70;
+    public int soulreaverWitherTicks = 100;
+    public int endSentinelWeaknessTicks = 90;
+    public int swarmheartWeaknessTicks = 80;
+    public int swarmheartMiningFatigueTicks = 120;
+    public int abyssalDarknessTicks = 90;
+    public int abyssalSlownessTicks = 80;
+    public int dreadwingBlindnessTicks = 70;
+    public int dreadwingWeaknessTicks = 70;
+
     private EliteConfig() {}
 
     public static void initialize() {
@@ -126,6 +142,22 @@ public final class EliteConfig {
         ashenWitherTicks = nonNegative(ashenWitherTicks);
         magmaFireSeconds = nonNegative(magmaFireSeconds);
         voidstalkerBlindnessTicks = nonNegative(voidstalkerBlindnessTicks);
+
+        sporeguardPoisonTicks = nonNegative(sporeguardPoisonTicks);
+        sporeguardSlownessTicks = nonNegative(sporeguardSlownessTicks);
+        caveStalkerPoisonTicks = nonNegative(caveStalkerPoisonTicks);
+        caveStalkerBlindnessTicks = nonNegative(caveStalkerBlindnessTicks);
+        tempestLevitationTicks = nonNegative(tempestLevitationTicks);
+        cinderFireSeconds = nonNegative(cinderFireSeconds);
+        cinderWeaknessTicks = nonNegative(cinderWeaknessTicks);
+        soulreaverWitherTicks = nonNegative(soulreaverWitherTicks);
+        endSentinelWeaknessTicks = nonNegative(endSentinelWeaknessTicks);
+        swarmheartWeaknessTicks = nonNegative(swarmheartWeaknessTicks);
+        swarmheartMiningFatigueTicks = nonNegative(swarmheartMiningFatigueTicks);
+        abyssalDarknessTicks = nonNegative(abyssalDarknessTicks);
+        abyssalSlownessTicks = nonNegative(abyssalSlownessTicks);
+        dreadwingBlindnessTicks = nonNegative(dreadwingBlindnessTicks);
+        dreadwingWeaknessTicks = nonNegative(dreadwingWeaknessTicks);
     }
 
     private static int nonNegative(int value) {
