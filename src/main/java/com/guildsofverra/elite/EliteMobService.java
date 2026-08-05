@@ -2,54 +2,31 @@ package com.guildsofverra.elite;
 
 import com.guildsofverra.config.EliteConfig;
 import com.guildsofverra.data.ProfileManager;
+import com.guildsofverra.event.HuntEventService;
+import com.guildsofverra.event.WorldEventService;
 import java.util.Comparator;
 import java.util.List;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
 
 public final class EliteMobService {
     private static final String CHECKED_TAG = "guildsofverra_elite_checked";
     private static final String ELITE_TAG = "guildsofverra_elite";
     private static final String VARIANT_TAG_PREFIX = "guildsofverra_elite_variant_";
-
-    private static final List<EliteVariantDefinition> VARIANTS = List.of(
-        new EliteVariantDefinition(
-            "tank_zombie", "minecraft:zombie", "Tank Zombie",
-            1.18, 2.25, 0.78, 8.0, 0.65, 1.25, 4.0
-        ),
-        new EliteVariantDefinition(
-            "bulwark_drowned", "minecraft:drowned", "Bulwark Drowned",
-            1.12, 2.0, 0.85, 7.0, 0.50, 1.15, 3.5
-        ),
-        new EliteVariantDefinition(
-            "armoured_skeleton", "minecraft:skeleton", "Armoured Skeleton",
-            1.05, 1.75, 0.90, 8.0, 0.25, 1.10, 3.5
-        ),
-        new EliteVariantDefinition(
-            "marksman_skeleton", "minecraft:skeleton", "Marksman Skeleton",
-            1.0, 1.40, 0.95, 2.0, 0.10, 1.30, 3.0
-        ),
-        new EliteVariantDefinition(
-            "brute_spider", "minecraft:spider", "Brute Spider",
-            1.20, 2.0, 0.90, 2.0, 0.35, 1.35, 3.5
-        ),
-        new EliteVariantDefinition(
-            "venom_spider", "minecraft:spider", "Venom Spider",
-            1.05, 1.50, 1.05, 0.0, 0.10, 1.15, 3.0
-        ),
-        new EliteVariantDefinition(
-            "volatile_creeper", "minecraft:creeper", "Volatile Creeper",
-            1.10, 1.50, 0.95, 2.0, 0.20, 1.0, 3.0
-        )
-    );
 
     private EliteMobService() {}
 
@@ -58,14 +35,17 @@ public final class EliteMobService {
             EliteConfig config = EliteConfig.current();
             if (!config.enabled
                 || !(entity instanceof LivingEntity living)
-                || living instanceof ServerPlayer) {
+                || living instanceof ServerPlayer
+                || HuntEventService.isHuntMember(entity)
+                || WorldEventService.isEventMob(entity)) {
                 return;
             }
 
             String typeId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).toString();
-            List<EliteVariantDefinition> matching = VARIANTS.stream()
-                .filter(variant -> variant.baseEntity().equals(typeId))
-                .toList();
+            List<EliteVariantDefinition> matching = EliteVariantRegistry.matching(
+                typeId,
+                Level.END.equals(level.dimension())
+            );
             if (matching.isEmpty() || !entity.addTag(CHECKED_TAG)) {
                 return;
             }
@@ -124,7 +104,7 @@ public final class EliteMobService {
     }
 
     public static String variantId(LivingEntity entity) {
-        for (EliteVariantDefinition variant : VARIANTS) {
+        for (EliteVariantDefinition variant : EliteVariantRegistry.all()) {
             if (hasTag(entity, VARIANT_TAG_PREFIX + variant.id())) {
                 return variant.id();
             }
@@ -133,10 +113,7 @@ public final class EliteMobService {
     }
 
     public static EliteVariantDefinition variant(String id) {
-        return VARIANTS.stream()
-            .filter(variant -> variant.id().equals(id))
-            .findFirst()
-            .orElse(null);
+        return EliteVariantRegistry.byId(id);
     }
 
     public static String discoveryId(String variantId) {
@@ -154,7 +131,55 @@ public final class EliteMobService {
     }
 
     public static List<EliteVariantDefinition> variants() {
-        return VARIANTS;
+        return EliteVariantRegistry.all();
+    }
+
+    /** Spawns one exact elite variant while bypassing natural rarity and population budgets. */
+    public static LivingEntity spawnVariant(
+        ServerLevel level,
+        BlockPos position,
+        EliteVariantDefinition variant,
+        int adventurerLevel
+    ) {
+        if (variant == null) {
+            return null;
+        }
+
+        EntityType<?> baseType = BuiltInRegistries.ENTITY_TYPE.stream()
+            .filter(type -> BuiltInRegistries.ENTITY_TYPE.getKey(type).toString()
+                .equals(variant.baseEntity()))
+            .findFirst()
+            .orElse(null);
+        if (baseType == null) {
+            return null;
+        }
+
+        Entity spawned = baseType.spawn(
+            level,
+            entity -> entity.addTag(CHECKED_TAG),
+            position,
+            EntitySpawnReason.COMMAND,
+            false,
+            false
+        );
+        if (!(spawned instanceof LivingEntity living)) {
+            if (spawned != null) {
+                spawned.discard();
+            }
+            return null;
+        }
+
+        if (living instanceof Mob mob) {
+            mob.setPersistenceRequired();
+        }
+        EliteConfig config = EliteConfig.current();
+        double statScale = EliteSpawnRules.statScale(
+            adventurerLevel,
+            config.statScalingPerAdventurerLevel,
+            config.maximumStatScaling
+        );
+        convert(living, variant, statScale, config.showEliteNames);
+        return living;
     }
 
     private static boolean hasTag(Entity entity, String tag) {
@@ -202,6 +227,27 @@ public final class EliteMobService {
             case "marksman_skeleton" -> {
                 equip(entity, EquipmentSlot.HEAD, new ItemStack(Items.LEATHER_HELMET));
                 equip(entity, EquipmentSlot.MAINHAND, new ItemStack(Items.BOW));
+            }
+            case "plague_husk" -> {
+                equip(entity, EquipmentSlot.HEAD, new ItemStack(Items.LEATHER_HELMET));
+                equip(entity, EquipmentSlot.CHEST, new ItemStack(Items.CHAINMAIL_CHESTPLATE));
+            }
+            case "frostbound_stray" -> {
+                equip(entity, EquipmentSlot.HEAD, new ItemStack(Items.CHAINMAIL_HELMET));
+                equip(entity, EquipmentSlot.MAINHAND, new ItemStack(Items.BOW));
+            }
+            case "raid_captain_pillager" -> {
+                equip(entity, EquipmentSlot.HEAD, new ItemStack(Items.GOLDEN_HELMET));
+                equip(entity, EquipmentSlot.CHEST, new ItemStack(Items.CHAINMAIL_CHESTPLATE));
+                equip(entity, EquipmentSlot.MAINHAND, new ItemStack(Items.CROSSBOW));
+            }
+            case "berserker_piglin" -> {
+                equip(entity, EquipmentSlot.HEAD, new ItemStack(Items.GOLDEN_HELMET));
+                equip(entity, EquipmentSlot.MAINHAND, new ItemStack(Items.GOLDEN_AXE));
+            }
+            case "ashen_wither_skeleton" -> {
+                equip(entity, EquipmentSlot.CHEST, new ItemStack(Items.CHAINMAIL_CHESTPLATE));
+                equip(entity, EquipmentSlot.MAINHAND, new ItemStack(Items.IRON_SWORD));
             }
             default -> { }
         }

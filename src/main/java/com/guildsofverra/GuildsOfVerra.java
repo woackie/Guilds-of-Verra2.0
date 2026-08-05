@@ -2,12 +2,17 @@ package com.guildsofverra;
 
 import com.guildsofverra.command.GvCommands;
 import com.guildsofverra.config.EliteConfig;
+import com.guildsofverra.config.HuntEventConfig;
 import com.guildsofverra.config.ProgressionConfig;
+import com.guildsofverra.config.WorldEventConfig;
 import com.guildsofverra.content.GvContent;
 import com.guildsofverra.data.GvAttachments;
 import com.guildsofverra.elite.EliteAbilityEvents;
 import com.guildsofverra.elite.EliteMobService;
+import com.guildsofverra.event.HuntEventService;
 import com.guildsofverra.event.ProgressionEvents;
+import com.guildsofverra.event.WorldEventService;
+import com.guildsofverra.event.WorldEventShutdownRecovery;
 import com.guildsofverra.network.GvNetworking;
 import com.guildsofverra.restriction.RestrictionEvents;
 import com.guildsofverra.world.DimensionGateEvents;
@@ -24,6 +29,8 @@ public final class GuildsOfVerra implements ModInitializer {
         GvContent.initialize();
         ProgressionConfig.initialize();
         EliteConfig.initialize();
+        HuntEventConfig.initialize();
+        WorldEventConfig.initialize();
         GvAttachments.initialize();
         GvNetworking.initialize();
         GvCommands.initialize();
@@ -32,6 +39,9 @@ public final class GuildsOfVerra implements ModInitializer {
         DimensionGateEvents.initialize();
         EliteMobService.initialize();
         EliteAbilityEvents.initialize();
+        HuntEventService.initialize();
+        WorldEventService.initialize();
+        WorldEventShutdownRecovery.initialize();
         LOGGER.info("Guilds of Verra {} initialized.", GvVersion.CURRENT);
     }
 

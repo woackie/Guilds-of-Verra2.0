@@ -37,10 +37,162 @@ public final class EliteAbilityEvents {
                     MobEffects.WEAKNESS,
                     config.bulwarkWeaknessTicks
                 );
-                case "volatile_creeper" -> {
-                    if (config.volatileFireSeconds > 0.0F) {
-                        victim.igniteForSeconds(config.volatileFireSeconds);
+                case "volatile_creeper" -> ignite(victim, config.volatileFireSeconds);
+
+                case "plague_husk" -> {
+                    addEffect(victim, attacker, MobEffects.HUNGER, config.plagueHungerTicks);
+                    addEffect(victim, attacker, MobEffects.POISON, config.plaguePoisonTicks);
+                }
+                case "frostbound_stray" -> {
+                    addEffect(
+                        victim,
+                        attacker,
+                        MobEffects.SLOWNESS,
+                        config.frostboundSlownessTicks
+                    );
+                    if (config.frostboundFreezeTicks > 0) {
+                        victim.setTicksFrozen(Math.max(
+                            victim.getTicksFrozen(),
+                            config.frostboundFreezeTicks
+                        ));
                     }
+                }
+                case "hexbinder_witch" -> {
+                    addEffect(
+                        victim,
+                        attacker,
+                        MobEffects.WEAKNESS,
+                        config.hexbinderWeaknessTicks
+                    );
+                    addEffect(
+                        victim,
+                        attacker,
+                        MobEffects.DARKNESS,
+                        config.hexbinderDarknessTicks
+                    );
+                }
+                case "raid_captain_pillager" -> addEffect(
+                    victim,
+                    attacker,
+                    MobEffects.WEAKNESS,
+                    config.raidCaptainWeaknessTicks
+                );
+                case "ironhide_ravager" -> addEffect(
+                    victim,
+                    attacker,
+                    MobEffects.SLOWNESS,
+                    config.ironhideSlownessTicks
+                );
+                case "ashen_wither_skeleton" -> addEffect(
+                    victim,
+                    attacker,
+                    MobEffects.WITHER,
+                    config.ashenWitherTicks
+                );
+                case "magma_colossus" -> ignite(victim, config.magmaFireSeconds);
+                case "voidstalker_enderman" -> addEffect(
+                    victim,
+                    attacker,
+                    MobEffects.BLINDNESS,
+                    config.voidstalkerBlindnessTicks
+                );
+
+                case "sporeguard_bogged" -> {
+                    addEffect(
+                        victim,
+                        attacker,
+                        MobEffects.POISON,
+                        config.sporeguardPoisonTicks
+                    );
+                    addEffect(
+                        victim,
+                        attacker,
+                        MobEffects.SLOWNESS,
+                        config.sporeguardSlownessTicks
+                    );
+                }
+                case "cave_stalker" -> {
+                    addEffect(
+                        victim,
+                        attacker,
+                        MobEffects.POISON,
+                        config.caveStalkerPoisonTicks
+                    );
+                    addEffect(
+                        victim,
+                        attacker,
+                        MobEffects.BLINDNESS,
+                        config.caveStalkerBlindnessTicks
+                    );
+                }
+                case "tempest_breeze" -> addEffect(
+                    victim,
+                    attacker,
+                    MobEffects.LEVITATION,
+                    config.tempestLevitationTicks
+                );
+                case "cinder_blaze" -> {
+                    ignite(victim, config.cinderFireSeconds);
+                    addEffect(
+                        victim,
+                        attacker,
+                        MobEffects.WEAKNESS,
+                        config.cinderWeaknessTicks
+                    );
+                }
+                case "soulreaver_ghast" -> addEffect(
+                    victim,
+                    attacker,
+                    MobEffects.WITHER,
+                    config.soulreaverWitherTicks
+                );
+                case "end_sentinel_shulker" -> addEffect(
+                    victim,
+                    attacker,
+                    MobEffects.WEAKNESS,
+                    config.endSentinelWeaknessTicks
+                );
+                case "swarmheart_silverfish" -> {
+                    addEffect(
+                        victim,
+                        attacker,
+                        MobEffects.WEAKNESS,
+                        config.swarmheartWeaknessTicks
+                    );
+                    addEffect(
+                        victim,
+                        attacker,
+                        MobEffects.MINING_FATIGUE,
+                        config.swarmheartMiningFatigueTicks
+                    );
+                }
+                case "abyssal_guardian" -> {
+                    addEffect(
+                        victim,
+                        attacker,
+                        MobEffects.DARKNESS,
+                        config.abyssalDarknessTicks
+                    );
+                    addEffect(
+                        victim,
+                        attacker,
+                        MobEffects.SLOWNESS,
+                        config.abyssalSlownessTicks
+                    );
+                }
+                case "dreadwing_phantom" -> {
+                    addEffect(
+                        victim,
+                        attacker,
+                        MobEffects.BLINDNESS,
+                        config.dreadwingBlindnessTicks
+                    );
+                    addEffect(
+                        victim,
+                        attacker,
+                        MobEffects.WEAKNESS,
+                        config.dreadwingWeaknessTicks
+                    );
                 }
                 default -> { }
             }
@@ -55,6 +207,12 @@ public final class EliteAbilityEvents {
     ) {
         if (durationTicks > 0) {
             victim.addEffect(new MobEffectInstance(effect, durationTicks, 0), attacker);
+        }
+    }
+
+    private static void ignite(LivingEntity victim, float seconds) {
+        if (seconds > 0.0F) {
+            victim.igniteForSeconds(seconds);
         }
     }
 }

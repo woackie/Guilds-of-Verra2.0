@@ -4,15 +4,17 @@ A lightweight, standalone, configurable Fabric progression mod for Minecraft Jav
 
 ## Current snapshot
 
-`0.1.0-dev.5` is the interactive-journal test candidate stacked on the verified dev.4 gate and elite foundation.
+`0.1.0-dev.5` remains the frozen interactive-journal test candidate stacked on the verified dev.4 gate and elite foundation.
 
-It adds spatial five-skill tree maps, prerequisite paths, pan and zoom controls, server-authoritative node purchasing and prestige, paged titles/discoveries/bestiary collections, active passive summaries, live dimension requirements, and a sixteen-entry equipment/Elytra unlock catalogue.
+The stacked `0.1.0-dev.6` development branch expands encounters to twenty-five vanilla-themed elite variants, adds configurable player-targeted Hunt Events, and adds seven mutually-exclusive survival world events: Blood Moon, Severe Thunderstorm, Cave Tremor, Nether Surge, Predator Migration, Long Night and Restless Dead.
 
-The underlying mod includes all five 100-point skill trees, persistent player profiles, Mining/Combat/Exploration/Fishing/Cooking progression, purchased-node passives, hard equipment locks, safe dimension gates, configurable elite encounters, discoveries, titles and administrative commands.
+Hunt Events warn an eligible player, spawn a scaled hostile pack farther away, repeatedly retarget the selected player, and clean up safely after victory, timeout, death, disconnect, dimension changes or server shutdown. World events use a separate server-wide scheduler, never overlap one another, and create combat, weather, underground, dimension and time-of-day pressure without modifying the frozen dev.5 artifact.
 
-`main` remains the latest promoted playable build. Dev.5 remains a stacked development candidate until dev.3/dev.4 runtime feedback is carried forward and the complete checklist passes.
+The underlying mod includes all five 100-point skill trees, persistent player profiles, Mining/Combat/Exploration/Fishing/Cooking progression, purchased-node passives, hard equipment locks, safe dimension gates, configurable elite encounters, discoveries, titles, an interactive journal and administrative commands.
 
-See [DEVELOPMENT_STATUS.md](DEVELOPMENT_STATUS.md) for exact implementation status. Use [TESTING_CHECKLIST.md](TESTING_CHECKLIST.md) for the prioritized dev.5 playtest and [RUNTIME_TEST_REPORT.md](RUNTIME_TEST_REPORT.md) to record problems consistently.
+`main` remains the latest promoted playable build. Dev.5 remains the prepared runtime-test candidate; dev.6 remains stacked on dev.5 and must not replace the frozen dev.5 artifact during its testing session.
+
+See [DEVELOPMENT_STATUS.md](DEVELOPMENT_STATUS.md) for exact implementation status. Use [TESTING_CHECKLIST.md](TESTING_CHECKLIST.md) for the prioritized dev.5 playtest, [RUNTIME_TEST_REPORT.md](RUNTIME_TEST_REPORT.md) to record problems consistently, [MILESTONE_DEV_6.md](MILESTONE_DEV_6.md) for the dev.6 scope, and [WORLD_EVENT_TESTING.md](WORLD_EVENT_TESTING.md) for the rapid seven-event test setup.
 
 ## Requirements
 
@@ -28,9 +30,36 @@ The mod generates:
 ```text
 config/guildsofverra/progression.json
 config/guildsofverra/elites.json
+config/guildsofverra/hunt_events.json
+config/guildsofverra/world_events.json
 ```
 
-`progression.json` controls skill XP rewards and progression feedback. `elites.json` controls elite rarity, nearby and regional caps, stat scaling, reward scaling, first-discovery XP, visible names and special-ability durations. Restart Minecraft after editing either file.
+- `progression.json` controls skill XP rewards and progression feedback.
+- `elites.json` controls elite rarity, nearby/regional caps, stat scaling, rewards, discoveries, visible names and ability durations.
+- `hunt_events.json` controls personal hunt chance, eligibility, warning delay, the 60-minute default cooldown, pack scaling, spawn distance, pursuit behaviour, duration, dimensions and concurrency.
+- `world_events.json` controls server-wide event frequency, the 60-minute minimum separation, event weights, durations, mob caps, weather pressure, revival chance and dimension-specific behavior.
+
+Restart Minecraft after editing a configuration file.
+
+## Operator testing commands
+
+The dev.6 encounter systems can be exercised without changing spawn chances or waiting for
+the natural schedulers. These commands require operator permission level 2:
+
+```text
+/gv event start <event>
+/gv event stop
+/gv event status
+/gv hunt start <player>
+/gv hunt stop <player>
+/gv hunt status <player>
+/gv elite spawn <variant> [count]
+```
+
+Event and elite IDs autocomplete in chat. Manual world events start immediately and still
+use the normal effects, duration and cleanup. A manual Hunt Event keeps its configured warning
+delay. Manually spawned elites use the executing player's Adventurer Level scaling while
+bypassing natural rarity and elite-population caps.
 
 ## Journal controls
 
@@ -70,4 +99,4 @@ The remapped mod JAR is written to `build/libs/`.
 python scripts/validate_project.py
 ```
 
-This validates JSON, skill-point totals, node prerequisites, XP monotonicity and default progression rules. The Gradle test suite additionally checks progression services, elite rules, safe returns, spatial tree layout, viewport behavior, summaries and language-key parity.
+This validates JSON, skill-point totals, node prerequisites, XP monotonicity and default progression rules. The Gradle test suite additionally checks progression services, elite rules, Hunt Event eligibility/scaling, world-event eligibility/weights/cooldowns/configuration, safe returns, spatial tree layout, viewport behavior, summaries and language-key parity.

@@ -1,5 +1,41 @@
 # Changelog
 
+## 0.1.0-dev.6 — Expanded Encounters
+
+- Expanded the vanilla-themed elite roster from seven to exactly twenty-five variants.
+- Added Plague Husk, Frostbound Stray, Hexbinder Witch, Raid Captain Pillager and Ironhide Ravager.
+- Added Berserker Piglin, Ashen Wither Skeleton, Magma Colossus and End-only Voidstalker Enderman.
+- Added Sporeguard Bogged, Cave Stalker, Tempest Breeze and Swarmheart Silverfish.
+- Added Cinder Blaze, Soulreaver Ghast, End Sentinel Shulker, Abyssal Guardian and Dreadwing Phantom.
+- Added a central deterministic elite registry with unique-ID and vanilla-entity coverage tests.
+- Preserved Adventurer-level scaling, nearby/regional spawn budgets and reward calculations for every variant.
+- Added configurable Poison, Slowness, Blindness, Levitation, Weakness, Wither, Darkness, Mining Fatigue, freezing and fire identities.
+- Added role equipment for humanoid expansion variants.
+- Extended automatic bestiary discoveries and first-discovery Exploration XP to all twenty-five variants.
+- Restricted Voidstalker Endermen to the End while preserving ordinary Endermen elsewhere.
+- Added configurable player-targeted Hunt Events with warnings, level-scaled packs and global concurrency caps.
+- Changed the default Hunt Event per-player cooldown from 45 to 60 minutes.
+- Added safe Hunt Event ring spawning, repeated target/path refresh and bounded pursuit distance.
+- Added victory, timeout, death, disconnect, dimension-change, chunk-reload and server-shutdown Hunt cleanup.
+- Kept Hunt Event mobs outside ordinary elite conversion and elite spawn budgets.
+- Added generated Hunt Event configuration at `config/guildsofverra/hunt_events.json`.
+- Added a mutually-exclusive server-wide survival event scheduler with a 30-minute startup grace period and 60-minute minimum separation.
+- Added **Blood Moon**, forcing midnight while nearby monsters gain Speed, Strength and stronger player acquisition.
+- Added **Severe Thunderstorm**, forcing violent weather and configurable lightning pressure around eligible Overworld players.
+- Added **Cave Tremor**, applying underground Mining Fatigue and spawning bounded Silverfish/Cave Spider hazards.
+- Added **Nether Surge**, applying Darkness, spawning dimension-specific pressure waves and empowering nearby Nether monsters.
+- Added **Predator Migration**, sending bounded Spider, Cave Spider and Wolf groups through occupied Overworld regions.
+- Added **Long Night**, holding the Overworld clock around midnight for an extended survival period.
+- Added **Restless Dead**, allowing supported undead to revive once after a configurable delay.
+- Added event-mob ownership, caps, unload/reload cleanup and elite-budget exclusion.
+- Added generated world-event configuration at `config/guildsofverra/world_events.json`.
+- Added eligibility, probability, cooldown, weighted-selection, spawn-cap and configuration-normalization tests.
+- Added rapid runtime checklists for elites, Hunt Events and all seven world events.
+- Added operator commands to start, stop and inspect world events and targeted Hunt Events.
+- Added an autocompleted elite spawn command with an optional 1–25 count for deterministic testing.
+- Migrated time control to Minecraft 26.2 world clocks and weather control to the server-owned weather system.
+- Updated build and synchronized version identity to `0.1.0-dev.6`.
+
 ## 0.1.0-dev.5 — Interactive Journal & Collections
 
 - Added clickable Overview, five skill, Collections, Gates and Unlocks journal tabs.

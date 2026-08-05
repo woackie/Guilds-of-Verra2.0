@@ -40,6 +40,34 @@ public final class EliteConfig {
     public int bulwarkWeaknessTicks = 80;
     public float volatileFireSeconds = 4.0F;
 
+    public int plagueHungerTicks = 160;
+    public int plaguePoisonTicks = 60;
+    public int frostboundSlownessTicks = 100;
+    public int frostboundFreezeTicks = 120;
+    public int hexbinderWeaknessTicks = 120;
+    public int hexbinderDarknessTicks = 60;
+    public int raidCaptainWeaknessTicks = 80;
+    public int ironhideSlownessTicks = 50;
+    public int ashenWitherTicks = 120;
+    public float magmaFireSeconds = 5.0F;
+    public int voidstalkerBlindnessTicks = 70;
+
+    public int sporeguardPoisonTicks = 80;
+    public int sporeguardSlownessTicks = 70;
+    public int caveStalkerPoisonTicks = 100;
+    public int caveStalkerBlindnessTicks = 45;
+    public int tempestLevitationTicks = 35;
+    public float cinderFireSeconds = 6.0F;
+    public int cinderWeaknessTicks = 70;
+    public int soulreaverWitherTicks = 100;
+    public int endSentinelWeaknessTicks = 90;
+    public int swarmheartWeaknessTicks = 80;
+    public int swarmheartMiningFatigueTicks = 120;
+    public int abyssalDarknessTicks = 90;
+    public int abyssalSlownessTicks = 80;
+    public int dreadwingBlindnessTicks = 70;
+    public int dreadwingWeaknessTicks = 70;
+
     private EliteConfig() {}
 
     public static void initialize() {
@@ -97,10 +125,47 @@ public final class EliteConfig {
         maximumStatScaling = Math.max(1.0, maximumStatScaling);
         combatXpRewardScale = Math.max(0.0, combatXpRewardScale);
         firstDiscoveryExplorationXp = Math.max(0L, firstDiscoveryExplorationXp);
-        venomPoisonTicks = Math.max(0, venomPoisonTicks);
-        marksmanSlownessTicks = Math.max(0, marksmanSlownessTicks);
-        bulwarkWeaknessTicks = Math.max(0, bulwarkWeaknessTicks);
-        volatileFireSeconds = Math.max(0.0F, volatileFireSeconds);
+
+        venomPoisonTicks = nonNegative(venomPoisonTicks);
+        marksmanSlownessTicks = nonNegative(marksmanSlownessTicks);
+        bulwarkWeaknessTicks = nonNegative(bulwarkWeaknessTicks);
+        volatileFireSeconds = nonNegative(volatileFireSeconds);
+
+        plagueHungerTicks = nonNegative(plagueHungerTicks);
+        plaguePoisonTicks = nonNegative(plaguePoisonTicks);
+        frostboundSlownessTicks = nonNegative(frostboundSlownessTicks);
+        frostboundFreezeTicks = nonNegative(frostboundFreezeTicks);
+        hexbinderWeaknessTicks = nonNegative(hexbinderWeaknessTicks);
+        hexbinderDarknessTicks = nonNegative(hexbinderDarknessTicks);
+        raidCaptainWeaknessTicks = nonNegative(raidCaptainWeaknessTicks);
+        ironhideSlownessTicks = nonNegative(ironhideSlownessTicks);
+        ashenWitherTicks = nonNegative(ashenWitherTicks);
+        magmaFireSeconds = nonNegative(magmaFireSeconds);
+        voidstalkerBlindnessTicks = nonNegative(voidstalkerBlindnessTicks);
+
+        sporeguardPoisonTicks = nonNegative(sporeguardPoisonTicks);
+        sporeguardSlownessTicks = nonNegative(sporeguardSlownessTicks);
+        caveStalkerPoisonTicks = nonNegative(caveStalkerPoisonTicks);
+        caveStalkerBlindnessTicks = nonNegative(caveStalkerBlindnessTicks);
+        tempestLevitationTicks = nonNegative(tempestLevitationTicks);
+        cinderFireSeconds = nonNegative(cinderFireSeconds);
+        cinderWeaknessTicks = nonNegative(cinderWeaknessTicks);
+        soulreaverWitherTicks = nonNegative(soulreaverWitherTicks);
+        endSentinelWeaknessTicks = nonNegative(endSentinelWeaknessTicks);
+        swarmheartWeaknessTicks = nonNegative(swarmheartWeaknessTicks);
+        swarmheartMiningFatigueTicks = nonNegative(swarmheartMiningFatigueTicks);
+        abyssalDarknessTicks = nonNegative(abyssalDarknessTicks);
+        abyssalSlownessTicks = nonNegative(abyssalSlownessTicks);
+        dreadwingBlindnessTicks = nonNegative(dreadwingBlindnessTicks);
+        dreadwingWeaknessTicks = nonNegative(dreadwingWeaknessTicks);
+    }
+
+    private static int nonNegative(int value) {
+        return Math.max(0, value);
+    }
+
+    private static float nonNegative(float value) {
+        return Math.max(0.0F, value);
     }
 
     private static double clampChance(double value) {
