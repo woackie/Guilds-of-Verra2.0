@@ -22,7 +22,7 @@ public final class ProfileJson {
 
     public static String toJson(PlayerProfile profile) {
         JsonObject root = new JsonObject();
-        root.addProperty("version", "0.1.0-dev.3");
+        root.addProperty("version", "0.1.0-dev.4");
         root.addProperty("payloadVersion", 2);
         root.addProperty("adventurerLevel", profile.adventurerLevel());
 
