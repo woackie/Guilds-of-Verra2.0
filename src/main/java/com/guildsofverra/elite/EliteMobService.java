@@ -8,6 +8,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -18,8 +19,6 @@ public final class EliteMobService {
     private static final String CHECKED_TAG = "guildsofverra_elite_checked";
     private static final String ELITE_TAG = "guildsofverra_elite";
     private static final String VARIANT_TAG_PREFIX = "guildsofverra_elite_variant_";
-    private static final String REWARD_TAG_PREFIX = "guildsofverra_elite_reward_";
-    private static final int REWARD_TAG_SCALE = 1_000;
 
     private static final List<EliteVariantDefinition> VARIANTS = List.of(
         new EliteVariantDefinition(
@@ -122,13 +121,13 @@ public final class EliteMobService {
     }
 
     public static boolean isElite(LivingEntity entity) {
-        return entity.getCommandTags().contains(ELITE_TAG);
+        return hasTag(entity, ELITE_TAG);
     }
 
     public static String variantId(LivingEntity entity) {
-        for (String tag : entity.getCommandTags()) {
-            if (tag.startsWith(VARIANT_TAG_PREFIX)) {
-                return tag.substring(VARIANT_TAG_PREFIX.length());
+        for (EliteVariantDefinition variant : VARIANTS) {
+            if (hasTag(entity, VARIANT_TAG_PREFIX + variant.id())) {
+                return variant.id();
             }
         }
         return "";
@@ -139,22 +138,24 @@ public final class EliteMobService {
      * Applying this to max-health-based XP produces the configured total XP multiplier.
      */
     public static double combatRewardAdjustment(LivingEntity entity) {
-        for (String tag : entity.getCommandTags()) {
-            if (!tag.startsWith(REWARD_TAG_PREFIX)) {
-                continue;
-            }
-            try {
-                int scaled = Integer.parseInt(tag.substring(REWARD_TAG_PREFIX.length()));
-                return Math.max(1.0, scaled / (double) REWARD_TAG_SCALE);
-            } catch (NumberFormatException ignored) {
-                return 1.0;
-            }
-        }
-        return 1.0;
+        String variantId = variantId(entity);
+        return VARIANTS.stream()
+            .filter(variant -> variant.id().equals(variantId))
+            .findFirst()
+            .map(EliteVariantDefinition::rewardAdjustment)
+            .orElse(1.0);
     }
 
     public static List<EliteVariantDefinition> variants() {
         return VARIANTS;
+    }
+
+    private static boolean hasTag(Entity entity, String tag) {
+        if (!entity.addTag(tag)) {
+            return true;
+        }
+        entity.removeTag(tag);
+        return false;
     }
 
     private static void convert(
@@ -165,11 +166,6 @@ public final class EliteMobService {
     ) {
         entity.addTag(ELITE_TAG);
         entity.addTag(VARIANT_TAG_PREFIX + variant.id());
-        entity.addTag(
-            REWARD_TAG_PREFIX
-                + Math.max(1, (int) Math.round(variant.rewardAdjustment() * REWARD_TAG_SCALE))
-        );
-
         entity.setCustomName(Component.literal(variant.displayName()));
         entity.setCustomNameVisible(showName);
         multiply(entity, Attributes.MAX_HEALTH, variant.healthMultiplier() * statScale);
