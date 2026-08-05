@@ -34,6 +34,12 @@ public final class EliteConfig {
     public long firstDiscoveryExplorationXp = 250L;
     public boolean announceFirstDiscovery = true;
 
+    public boolean specialAbilitiesEnabled = true;
+    public int venomPoisonTicks = 100;
+    public int marksmanSlownessTicks = 60;
+    public int bulwarkWeaknessTicks = 80;
+    public float volatileFireSeconds = 4.0F;
+
     private EliteConfig() {}
 
     public static void initialize() {
@@ -91,6 +97,10 @@ public final class EliteConfig {
         maximumStatScaling = Math.max(1.0, maximumStatScaling);
         combatXpRewardScale = Math.max(0.0, combatXpRewardScale);
         firstDiscoveryExplorationXp = Math.max(0L, firstDiscoveryExplorationXp);
+        venomPoisonTicks = Math.max(0, venomPoisonTicks);
+        marksmanSlownessTicks = Math.max(0, marksmanSlownessTicks);
+        bulwarkWeaknessTicks = Math.max(0, bulwarkWeaknessTicks);
+        volatileFireSeconds = Math.max(0.0F, volatileFireSeconds);
     }
 
     private static double clampChance(double value) {
