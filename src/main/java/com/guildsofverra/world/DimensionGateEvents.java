@@ -44,7 +44,7 @@ public final class DimensionGateEvents {
 
                 RETURN_HISTORY.record(
                     playerId,
-                    player.serverLevel().dimension(),
+                    player.level().dimension(),
                     player.getX(),
                     player.getY(),
                     player.getZ(),
