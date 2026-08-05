@@ -133,17 +133,29 @@ public final class EliteMobService {
         return "";
     }
 
+    public static EliteVariantDefinition variant(String id) {
+        return VARIANTS.stream()
+            .filter(variant -> variant.id().equals(id))
+            .findFirst()
+            .orElse(null);
+    }
+
+    public static String discoveryId(String variantId) {
+        return variantId == null || variantId.isBlank()
+            ? ""
+            : "guildsofverra:" + variantId;
+    }
+
     /**
      * Adjusts reward math because elite max health has already been multiplied.
      * Applying this to max-health-based XP produces the configured total XP multiplier.
      */
     public static double combatRewardAdjustment(LivingEntity entity) {
-        String variantId = variantId(entity);
-        return VARIANTS.stream()
-            .filter(variant -> variant.id().equals(variantId))
-            .findFirst()
-            .map(EliteVariantDefinition::rewardAdjustment)
-            .orElse(1.0);
+        EliteVariantDefinition variant = variant(variantId(entity));
+        if (variant == null) {
+            return 1.0;
+        }
+        return variant.rewardAdjustment() * EliteConfig.current().combatXpRewardScale;
     }
 
     public static List<EliteVariantDefinition> variants() {
