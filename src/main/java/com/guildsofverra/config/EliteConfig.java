@@ -30,6 +30,10 @@ public final class EliteConfig {
     public double maximumStatScaling = 1.30;
     public boolean showEliteNames = true;
 
+    public double combatXpRewardScale = 1.0;
+    public long firstDiscoveryExplorationXp = 250L;
+    public boolean announceFirstDiscovery = true;
+
     private EliteConfig() {}
 
     public static void initialize() {
@@ -85,6 +89,8 @@ public final class EliteConfig {
         regionRadius = Math.max(nearbyRadius, regionRadius);
         statScalingPerAdventurerLevel = Math.max(0.0, statScalingPerAdventurerLevel);
         maximumStatScaling = Math.max(1.0, maximumStatScaling);
+        combatXpRewardScale = Math.max(0.0, combatXpRewardScale);
+        firstDiscoveryExplorationXp = Math.max(0L, firstDiscoveryExplorationXp);
     }
 
     private static double clampChance(double value) {
