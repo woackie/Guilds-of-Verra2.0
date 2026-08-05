@@ -45,8 +45,9 @@ public final class JournalFeedbackOverlay {
             return;
         }
 
+        String rawMessage = (feedback.success() ? "✓ " : "! ") + feedback.message();
         Component message = Component.literal(
-            (feedback.success() ? "✓ " : "! ") + feedback.message()
+            fitToWidth(client, rawMessage, Math.max(40, scaledWidth - 24))
         );
         int textWidth = client.font.width(message);
         int x = Math.max(8, (scaledWidth - textWidth) / 2);
@@ -63,5 +64,18 @@ public final class JournalFeedbackOverlay {
             feedback.success() ? 0xFF82C98B : 0xFFE08383,
             false
         );
+    }
+
+    private static String fitToWidth(Minecraft client, String text, int maximumWidth) {
+        if (client.font.width(text) <= maximumWidth) {
+            return text;
+        }
+
+        String shortened = text;
+        while (shortened.length() > 1
+            && client.font.width(shortened + "…") > maximumWidth) {
+            shortened = shortened.substring(0, shortened.length() - 1);
+        }
+        return shortened + "…";
     }
 }
