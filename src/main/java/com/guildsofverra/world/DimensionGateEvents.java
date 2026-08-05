@@ -149,7 +149,7 @@ public final class DimensionGateEvents {
         long now
     ) {
         ServerLevel overworld = server.overworld();
-        BlockPos spawn = overworld.getSharedSpawnPos();
+        BlockPos spawn = overworld.getRespawnData().pos();
 
         RETURN_GUARDS.put(
             player.getUUID(),
