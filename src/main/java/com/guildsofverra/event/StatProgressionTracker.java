@@ -138,7 +138,7 @@ public final class StatProgressionTracker {
                 int bonuses = ProgressionRewardMath.bonusRolls(
                     entry.getValue(),
                     extraFishChance,
-                    player.getRandom()
+                    player.getRandom()::nextDouble
                 );
                 giveItem(player, entry.getKey(), bonuses);
             }
@@ -176,7 +176,7 @@ public final class StatProgressionTracker {
             int bonuses = ProgressionRewardMath.bonusRolls(
                 entry.getValue(),
                 extraOutputChance,
-                player.getRandom()
+                player.getRandom()::nextDouble
             );
             giveItem(player, entry.getKey(), bonuses);
         }
