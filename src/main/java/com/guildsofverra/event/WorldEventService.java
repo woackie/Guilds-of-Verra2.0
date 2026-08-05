@@ -287,15 +287,15 @@ public final class WorldEventService {
         if (ending.type() == WorldEventType.SEVERE_THUNDERSTORM) {
             ServerLevel overworld = server.getLevel(Level.OVERWORLD);
             if (overworld != null) {
-                overworld.setWeatherParameters(6000, 0, false, false);
+                overworld.setWeather(6000, 0, false, false);
             }
         }
         if (ending.type() == WorldEventType.BLOOD_MOON
             || ending.type() == WorldEventType.LONG_NIGHT) {
             ServerLevel overworld = server.getLevel(Level.OVERWORLD);
             if (overworld != null) {
-                long day = overworld.getDayTime();
-                overworld.setDayTime(day - Math.floorMod(day, 24_000L) + 23_000L);
+                long day = overworld.getTimeOfDay();
+                overworld.setTimeOfDay(day - Math.floorMod(day, 24_000L) + 23_000L);
             }
         }
 
@@ -314,14 +314,14 @@ public final class WorldEventService {
         if (overworld == null) {
             return;
         }
-        long day = overworld.getDayTime();
-        overworld.setDayTime(day - Math.floorMod(day, 24_000L) + 18_000L);
+        long day = overworld.getTimeOfDay();
+        overworld.setTimeOfDay(day - Math.floorMod(day, 24_000L) + 18_000L);
     }
 
     private static void maintainStorm(MinecraftServer server) {
         ServerLevel overworld = server.getLevel(Level.OVERWORLD);
         if (overworld != null) {
-            overworld.setWeatherParameters(0, 400, true, true);
+            overworld.setWeather(0, 400, true, true);
         }
     }
 
