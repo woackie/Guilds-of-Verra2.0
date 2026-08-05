@@ -13,13 +13,45 @@ The seven world events are mutually exclusive. Hunt Events remain a separate per
 
 This produces roughly one world event every 90–105 minutes during long eligible sessions, depending on event duration and random rolls.
 
-## Rapid test configuration
+## Rapid operator commands
 
-Back up the world, start Minecraft once to generate the config, then close the game and edit:
+Use the dev.6 operator commands to start each event immediately. Event IDs autocomplete after
+typing `/gv event start `.
 
-`config/guildsofverra/world_events.json`
+```text
+/gv event start blood_moon
+/gv event start severe_thunderstorm
+/gv event start cave_tremor
+/gv event start nether_surge
+/gv event start predator_migration
+/gv event start long_night
+/gv event start restless_dead
+/gv event status
+/gv event stop
+```
 
-Use these temporary scheduler values:
+Only one world event can be pending or active. Run `/gv event stop` before starting the next
+one. Manual starts bypass random chance, scheduler cooldown, event weights, minimum Adventurer
+Level and Creative-mode exclusion. The global `enabled` setting must remain `true`, and each
+event's dimension/position requirements still determine where its effects appear.
+
+Hunt Events and elite variants have separate test commands:
+
+```text
+/gv hunt start @s
+/gv hunt status @s
+/gv hunt stop @s
+/gv elite spawn tank_zombie
+/gv elite spawn brute_spider 5
+```
+
+Elite variant IDs autocomplete in chat. The optional count is limited to 1–25.
+
+## Optional natural-scheduler configuration
+
+Use this only when testing natural warnings, random selection and pacing. Back up the world,
+start Minecraft once to generate the config, then close the game and edit
+`config/guildsofverra/world_events.json`:
 
 ```json
 {

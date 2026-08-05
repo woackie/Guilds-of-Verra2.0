@@ -110,6 +110,58 @@ public final class WorldEventService {
         return active == null ? null : active.type();
     }
 
+    /** Starts a specific event immediately for operator-driven runtime testing. */
+    public static boolean startNow(MinecraftServer server, WorldEventType type) {
+        WorldEventConfig config = WorldEventConfig.current();
+        if (!config.enabled || type == null || pending != null || active != null) {
+            return false;
+        }
+
+        long tick = server.getTickCount();
+        pending = new PendingEvent(type, tick, true);
+        startPending(server, tick, config);
+        return active != null && active.type() == type;
+    }
+
+    /** Ends the pending or active event and performs the same cleanup as a natural ending. */
+    public static boolean stopNow(MinecraftServer server) {
+        WorldEventConfig config = WorldEventConfig.current();
+        long tick = server.getTickCount();
+        if (active != null) {
+            endActive(server, tick, config);
+            return true;
+        }
+        if (pending == null) {
+            return false;
+        }
+
+        pending = null;
+        REVIVALS.clear();
+        nextEventAllowedTick = tick
+            + WorldEventRules.cooldownTicks(config.minimumMinutesBetweenEvents);
+        return true;
+    }
+
+    public static String status(MinecraftServer server) {
+        if (active != null) {
+            long seconds = Math.max(
+                0L,
+                (active.endsAtTick() - server.getTickCount() + 19L) / 20L
+            );
+            return "Active world event: " + active.type().displayName()
+                + " (" + seconds + "s remaining)";
+        }
+        if (pending != null) {
+            long seconds = Math.max(
+                0L,
+                (pending.startsAtTick() - server.getTickCount() + 19L) / 20L
+            );
+            return "Pending world event: " + pending.type().displayName()
+                + " (starts in " + seconds + "s)";
+        }
+        return "No world event is pending or active.";
+    }
+
     private static void tick(MinecraftServer server) {
         WorldEventConfig config = WorldEventConfig.current();
         long tick = server.getTickCount();
@@ -186,7 +238,8 @@ public final class WorldEventService {
 
         pending = new PendingEvent(
             selected,
-            tick + (long) config.warningSeconds * 20L
+            tick + (long) config.warningSeconds * 20L,
+            false
         );
         if (config.announceEvents) {
             announce(server, "§6[World Event] §e" + selected.warningMessage());
@@ -210,7 +263,8 @@ public final class WorldEventService {
             tick + WorldEventRules.durationTicks(
                 config.durationSeconds(starting.type().id())
             ),
-            new HashSet<>()
+            new HashSet<>(),
+            starting.forced()
         );
 
         if (config.announceEvents) {
@@ -631,6 +685,9 @@ public final class WorldEventService {
         ServerPlayer player,
         WorldEventConfig config
     ) {
+        if (active != null && active.forced()) {
+            return player.isAlive() && !player.isSpectator();
+        }
         return WorldEventRules.eligiblePlayer(
             ProfileManager.get(player).adventurerLevel(),
             config.minimumAdventurerLevel,
@@ -793,14 +850,16 @@ public final class WorldEventService {
 
     private record PendingEvent(
         WorldEventType type,
-        long startsAtTick
+        long startsAtTick,
+        boolean forced
     ) {}
 
     private record ActiveEvent(
         WorldEventType type,
         long startedAtTick,
         long endsAtTick,
-        Set<UUID> members
+        Set<UUID> members,
+        boolean forced
     ) {}
 
     private record PendingRevival(

@@ -41,6 +41,26 @@ config/guildsofverra/world_events.json
 
 Restart Minecraft after editing a configuration file.
 
+## Operator testing commands
+
+The dev.6 encounter systems can be exercised without changing spawn chances or waiting for
+the natural schedulers. These commands require operator permission level 2:
+
+```text
+/gv event start <event>
+/gv event stop
+/gv event status
+/gv hunt start <player>
+/gv hunt stop <player>
+/gv hunt status <player>
+/gv elite spawn <variant> [count]
+```
+
+Event and elite IDs autocomplete in chat. Manual world events start immediately and still
+use the normal effects, duration and cleanup. A manual Hunt Event keeps its configured warning
+delay. Manually spawned elites use the executing player's Adventurer Level scaling while
+bypassing natural rarity and elite-population caps.
+
 ## Journal controls
 
 - Press `J` to open the journal.

@@ -31,6 +31,8 @@
 - Added generated world-event configuration at `config/guildsofverra/world_events.json`.
 - Added eligibility, probability, cooldown, weighted-selection, spawn-cap and configuration-normalization tests.
 - Added rapid runtime checklists for elites, Hunt Events and all seven world events.
+- Added operator commands to start, stop and inspect world events and targeted Hunt Events.
+- Added an autocompleted elite spawn command with an optional 1–25 count for deterministic testing.
 - Migrated time control to Minecraft 26.2 world clocks and weather control to the server-owned weather system.
 - Updated build and synchronized version identity to `0.1.0-dev.6`.
 

@@ -90,4 +90,16 @@ public enum WorldEventType {
     public String endMessage() {
         return endMessage;
     }
+
+    public static WorldEventType byId(String id) {
+        if (id == null) {
+            return null;
+        }
+        for (WorldEventType type : values()) {
+            if (type.id.equalsIgnoreCase(id)) {
+                return type;
+            }
+        }
+        return null;
+    }
 }

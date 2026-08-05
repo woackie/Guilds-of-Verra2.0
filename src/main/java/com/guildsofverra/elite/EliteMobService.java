@@ -7,12 +7,17 @@ import com.guildsofverra.event.WorldEventService;
 import java.util.Comparator;
 import java.util.List;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -127,6 +132,54 @@ public final class EliteMobService {
 
     public static List<EliteVariantDefinition> variants() {
         return EliteVariantRegistry.all();
+    }
+
+    /** Spawns one exact elite variant while bypassing natural rarity and population budgets. */
+    public static LivingEntity spawnVariant(
+        ServerLevel level,
+        BlockPos position,
+        EliteVariantDefinition variant,
+        int adventurerLevel
+    ) {
+        if (variant == null) {
+            return null;
+        }
+
+        EntityType<?> baseType = BuiltInRegistries.ENTITY_TYPE.stream()
+            .filter(type -> BuiltInRegistries.ENTITY_TYPE.getKey(type).toString()
+                .equals(variant.baseEntity()))
+            .findFirst()
+            .orElse(null);
+        if (baseType == null) {
+            return null;
+        }
+
+        Entity spawned = baseType.spawn(
+            level,
+            entity -> entity.addTag(CHECKED_TAG),
+            position,
+            EntitySpawnReason.COMMAND,
+            false,
+            false
+        );
+        if (!(spawned instanceof LivingEntity living)) {
+            if (spawned != null) {
+                spawned.discard();
+            }
+            return null;
+        }
+
+        if (living instanceof Mob mob) {
+            mob.setPersistenceRequired();
+        }
+        EliteConfig config = EliteConfig.current();
+        double statScale = EliteSpawnRules.statScale(
+            adventurerLevel,
+            config.statScalingPerAdventurerLevel,
+            config.maximumStatScaling
+        );
+        convert(living, variant, statScale, config.showEliteNames);
+        return living;
     }
 
     private static boolean hasTag(Entity entity, String tag) {

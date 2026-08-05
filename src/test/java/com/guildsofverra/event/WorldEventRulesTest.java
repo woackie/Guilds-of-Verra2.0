@@ -61,4 +61,15 @@ class WorldEventRulesTest {
         assertEquals(600L, WorldEventRules.durationTicks(1));
         assertEquals(72_000L, WorldEventRules.cooldownTicks(60));
     }
+
+    @Test
+    void resolvesCommandFacingEventIds() {
+        assertEquals(WorldEventType.BLOOD_MOON, WorldEventType.byId("blood_moon"));
+        assertEquals(
+            WorldEventType.SEVERE_THUNDERSTORM,
+            WorldEventType.byId("SEVERE_THUNDERSTORM")
+        );
+        assertNull(WorldEventType.byId("not_an_event"));
+        assertNull(WorldEventType.byId(null));
+    }
 }

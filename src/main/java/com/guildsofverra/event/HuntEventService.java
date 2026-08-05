@@ -79,6 +79,77 @@ public final class HuntEventService {
         return hasTag(entity, HUNT_MEMBER_TAG);
     }
 
+    /** Schedules a targeted hunt while bypassing natural chance, level and cooldown checks. */
+    public static boolean startNow(ServerPlayer player) {
+        HuntEventConfig config = HuntEventConfig.current();
+        UUID playerId = player.getUUID();
+        if (!config.enabled
+            || !player.isAlive()
+            || player.isSpectator()
+            || PENDING.containsKey(playerId)
+            || ACTIVE.containsKey(playerId)
+            || !(player.level() instanceof ServerLevel level)
+            || pool(level.dimension()).isEmpty()) {
+            return false;
+        }
+
+        int packSize = HuntEventRules.packSize(
+            ProfileManager.get(player).adventurerLevel(),
+            config.minimumAdventurerLevel,
+            config.minimumPackSize,
+            config.adventurerLevelsPerAdditionalMob,
+            config.maximumPackSize
+        );
+        long spawnAt = level.getServer().getTickCount()
+            + (long) config.warningSeconds * 20L;
+        PENDING.put(
+            playerId,
+            new PendingHunt(playerId, level.dimension(), spawnAt, packSize, true)
+        );
+
+        if (config.announceEvents) {
+            player.sendSystemMessage(Component.literal(
+                "A hostile pack has caught your trail. Something is gathering nearby..."
+            ));
+        }
+        return true;
+    }
+
+    /** Stops a pending or active hunt for one player and removes its remaining members. */
+    public static boolean stopNow(MinecraftServer server, ServerPlayer player) {
+        UUID playerId = player.getUUID();
+        boolean stopped = PENDING.remove(playerId) != null;
+        ActiveHunt hunt = ACTIVE.remove(playerId);
+        if (hunt != null) {
+            discardMembers(server.getLevel(hunt.dimension()), hunt.members());
+            stopped = true;
+        }
+        return stopped;
+    }
+
+    public static String status(MinecraftServer server, ServerPlayer player) {
+        PendingHunt pending = PENDING.get(player.getUUID());
+        if (pending != null) {
+            long seconds = Math.max(
+                0L,
+                (pending.spawnAtTick() - server.getTickCount() + 19L) / 20L
+            );
+            return "Hunt pending for " + player.getName().getString()
+                + " (pack arrives in " + seconds + "s)";
+        }
+
+        ActiveHunt hunt = ACTIVE.get(player.getUUID());
+        if (hunt != null) {
+            long seconds = Math.max(
+                0L,
+                (hunt.expiresAtTick() - server.getTickCount() + 19L) / 20L
+            );
+            return "Hunt active for " + player.getName().getString()
+                + " (" + hunt.members().size() + " hunters, " + seconds + "s remaining)";
+        }
+        return "No hunt is pending or active for " + player.getName().getString() + ".";
+    }
+
     private static boolean isTrackedMember(UUID memberId) {
         return ACTIVE.values().stream().anyMatch(hunt -> hunt.members().contains(memberId));
     }
@@ -158,7 +229,7 @@ public final class HuntEventService {
             long spawnAt = tick + (long) config.warningSeconds * 20L;
             PENDING.put(
                 playerId,
-                new PendingHunt(playerId, level.dimension(), spawnAt, packSize)
+                new PendingHunt(playerId, level.dimension(), spawnAt, packSize, false)
             );
             COOLDOWN_UNTIL.put(
                 playerId,
@@ -192,7 +263,7 @@ public final class HuntEventService {
             if (player == null
                 || !player.isAlive()
                 || player.isSpectator()
-                || (!config.allowCreativePlayers && player.isCreative())
+                || (!pending.forced() && !config.allowCreativePlayers && player.isCreative())
                 || !(player.level() instanceof ServerLevel level)
                 || !pending.dimension().equals(level.dimension())) {
                 continue;
@@ -214,7 +285,8 @@ public final class HuntEventService {
                     player.getUUID(),
                     level.dimension(),
                     members,
-                    tick + HuntEventRules.durationTicks(config.eventDurationSeconds)
+                    tick + HuntEventRules.durationTicks(config.eventDurationSeconds),
+                    pending.forced()
                 )
             );
             if (config.announceEvents) {
@@ -317,7 +389,7 @@ public final class HuntEventService {
                 || level == null
                 || !player.isAlive()
                 || player.isSpectator()
-                || (!config.allowCreativePlayers && player.isCreative())
+                || (!hunt.forced() && !config.allowCreativePlayers && player.isCreative())
                 || !hunt.dimension().equals(player.level().dimension())) {
                 discardMembers(level, hunt.members());
                 iterator.remove();
@@ -421,13 +493,15 @@ public final class HuntEventService {
         UUID targetPlayer,
         ResourceKey<Level> dimension,
         long spawnAtTick,
-        int packSize
+        int packSize,
+        boolean forced
     ) {}
 
     private record ActiveHunt(
         UUID targetPlayer,
         ResourceKey<Level> dimension,
         Set<UUID> members,
-        long expiresAtTick
+        long expiresAtTick,
+        boolean forced
     ) {}
 }

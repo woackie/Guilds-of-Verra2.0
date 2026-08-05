@@ -87,4 +87,12 @@ class EliteVariantRegistryTest {
                 .collect(Collectors.toSet())
         ));
     }
+
+    @Test
+    void resolvesEveryCommandFacingVariantId() {
+        EliteVariantRegistry.all().forEach(variant -> assertEquals(
+            variant,
+            EliteVariantRegistry.byId(variant.id())
+        ));
+    }
 }

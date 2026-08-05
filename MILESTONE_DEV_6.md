@@ -143,6 +143,14 @@ Configuration: `config/guildsofverra/world_events.json`.
 - Java 25/Fabric client and server compilation.
 - Automated tests and artifact packaging.
 
+## Operator testing controls
+
+- Added immediate start, stop and status commands for all seven world events.
+- Added targeted Hunt Event start, stop and status commands.
+- Added exact elite-variant spawning with autocomplete and an optional 1–25 count.
+- Manual encounter starts bypass natural chance, cooldown and progression eligibility while
+  preserving real combat behavior, scaling, rewards, tracking and cleanup.
+
 ## Runtime verification still required
 
 ### Elite encounters
