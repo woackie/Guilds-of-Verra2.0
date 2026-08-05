@@ -13,7 +13,15 @@
 - Added role equipment for humanoid expansion variants.
 - Extended automatic bestiary discoveries and first-discovery Exploration XP to all twenty-five variants.
 - Restricted Voidstalker Endermen to the End while preserving ordinary Endermen elsewhere.
-- Added a complete natural-spawn, ability, balance, bestiary and performance runtime checklist.
+- Added configurable player-targeted Hunt Events with warnings, cooldowns and global concurrency caps.
+- Added Adventurer-Level-scaled hunting packs using separate Overworld, Nether and End hostile pools.
+- Added safe ring spawning in loaded chunks, repeated target/path refresh and bounded pursuit distance.
+- Added victory, timeout, death, disconnect, dimension-change and server-shutdown cleanup.
+- Added reload-time ownership checks that discard orphaned Hunt Event mobs after chunk unloads or restarts.
+- Kept Hunt Event mobs outside ordinary elite conversion and elite spawn budgets.
+- Added generated Hunt Event configuration at `config/guildsofverra/hunt_events.json`.
+- Added eligibility, probability, cooldown and pack-scaling unit tests.
+- Added a complete natural-spawn, ability, Hunt Event, balance, bestiary and performance runtime checklist.
 - Updated build and synchronized version identity to `0.1.0-dev.6`.
 
 ## 0.1.0-dev.5 — Interactive Journal & Collections
