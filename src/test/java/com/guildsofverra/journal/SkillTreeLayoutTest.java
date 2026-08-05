@@ -47,6 +47,28 @@ class SkillTreeLayoutTest {
     }
 
     @Test
+    void adjacentMinimumLevelsOccupySeparateNonOverlappingColumns() {
+        SkillTreeDefinition tree = new SkillTreeDefinition(
+            SkillId.MINING,
+            100,
+            1,
+            List.of(
+                node("level_one", 1, "core", List.of()),
+                node("level_two", 2, "core", List.of("level_one"))
+            )
+        );
+
+        SkillTreeLayout.Layout layout = SkillTreeLayout.build(tree);
+        SkillTreeLayout.LayoutNode levelOne = layout.node("level_one");
+        SkillTreeLayout.LayoutNode levelTwo = layout.node("level_two");
+
+        assertNotNull(levelOne);
+        assertNotNull(levelTwo);
+        assertTrue(levelTwo.x() > levelOne.x());
+        assertTrue(levelTwo.x() - levelOne.x() >= SkillTreeLayout.NODE_WIDTH);
+    }
+
+    @Test
     void reportsMissingPrerequisitesWithoutInventingEdges() {
         SkillNodeDefinition broken = new SkillNodeDefinition(
             "broken",
