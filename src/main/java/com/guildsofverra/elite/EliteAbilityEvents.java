@@ -96,6 +96,104 @@ public final class EliteAbilityEvents {
                     MobEffects.BLINDNESS,
                     config.voidstalkerBlindnessTicks
                 );
+
+                case "sporeguard_bogged" -> {
+                    addEffect(
+                        victim,
+                        attacker,
+                        MobEffects.POISON,
+                        config.sporeguardPoisonTicks
+                    );
+                    addEffect(
+                        victim,
+                        attacker,
+                        MobEffects.SLOWNESS,
+                        config.sporeguardSlownessTicks
+                    );
+                }
+                case "cave_stalker" -> {
+                    addEffect(
+                        victim,
+                        attacker,
+                        MobEffects.POISON,
+                        config.caveStalkerPoisonTicks
+                    );
+                    addEffect(
+                        victim,
+                        attacker,
+                        MobEffects.BLINDNESS,
+                        config.caveStalkerBlindnessTicks
+                    );
+                }
+                case "tempest_breeze" -> addEffect(
+                    victim,
+                    attacker,
+                    MobEffects.LEVITATION,
+                    config.tempestLevitationTicks
+                );
+                case "cinder_blaze" -> {
+                    ignite(victim, config.cinderFireSeconds);
+                    addEffect(
+                        victim,
+                        attacker,
+                        MobEffects.WEAKNESS,
+                        config.cinderWeaknessTicks
+                    );
+                }
+                case "soulreaver_ghast" -> addEffect(
+                    victim,
+                    attacker,
+                    MobEffects.WITHER,
+                    config.soulreaverWitherTicks
+                );
+                case "end_sentinel_shulker" -> addEffect(
+                    victim,
+                    attacker,
+                    MobEffects.WEAKNESS,
+                    config.endSentinelWeaknessTicks
+                );
+                case "swarmheart_silverfish" -> {
+                    addEffect(
+                        victim,
+                        attacker,
+                        MobEffects.WEAKNESS,
+                        config.swarmheartWeaknessTicks
+                    );
+                    addEffect(
+                        victim,
+                        attacker,
+                        MobEffects.MINING_FATIGUE,
+                        config.swarmheartMiningFatigueTicks
+                    );
+                }
+                case "abyssal_guardian" -> {
+                    addEffect(
+                        victim,
+                        attacker,
+                        MobEffects.DARKNESS,
+                        config.abyssalDarknessTicks
+                    );
+                    addEffect(
+                        victim,
+                        attacker,
+                        MobEffects.SLOWNESS,
+                        config.abyssalSlownessTicks
+                    );
+                }
+                case "dreadwing_phantom" -> {
+                    addEffect(
+                        victim,
+                        attacker,
+                        MobEffects.BLINDNESS,
+                        config.dreadwingBlindnessTicks
+                    );
+                    addEffect(
+                        victim,
+                        attacker,
+                        MobEffects.WEAKNESS,
+                        config.dreadwingWeaknessTicks
+                    );
+                }
                 default -> { }
             }
         });
