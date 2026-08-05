@@ -32,8 +32,7 @@ public final class EliteMobService {
                 || !(entity instanceof LivingEntity living)
                 || living instanceof ServerPlayer
                 || HuntEventService.isHuntMember(entity)
-                || WorldEventService.isEventMob(entity)
-                || entity.tickCount > 1) {
+                || WorldEventService.isEventMob(entity)) {
                 return;
             }
 
@@ -118,10 +117,6 @@ public final class EliteMobService {
             : "guildsofverra:" + variantId;
     }
 
-    /**
-     * Adjusts reward math because elite max health has already been multiplied.
-     * Applying this to max-health-based XP produces the configured total XP multiplier.
-     */
     public static double combatRewardAdjustment(LivingEntity entity) {
         EliteVariantDefinition variant = variant(variantId(entity));
         if (variant == null) {
