@@ -53,6 +53,10 @@ public final class JournalClientActions {
         return true;
     }
 
+    public static void reset() {
+        nextActionAt = 0L;
+    }
+
     private static boolean allowAction(long now) {
         return now >= nextActionAt;
     }
