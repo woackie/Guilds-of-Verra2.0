@@ -122,11 +122,11 @@ public final class EliteMobService {
     }
 
     public static boolean isElite(LivingEntity entity) {
-        return entity.getTags().contains(ELITE_TAG);
+        return entity.getCommandTags().contains(ELITE_TAG);
     }
 
     public static String variantId(LivingEntity entity) {
-        for (String tag : entity.getTags()) {
+        for (String tag : entity.getCommandTags()) {
             if (tag.startsWith(VARIANT_TAG_PREFIX)) {
                 return tag.substring(VARIANT_TAG_PREFIX.length());
             }
@@ -139,7 +139,7 @@ public final class EliteMobService {
      * Applying this to max-health-based XP produces the configured total XP multiplier.
      */
     public static double combatRewardAdjustment(LivingEntity entity) {
-        for (String tag : entity.getTags()) {
+        for (String tag : entity.getCommandTags()) {
             if (!tag.startsWith(REWARD_TAG_PREFIX)) {
                 continue;
             }
