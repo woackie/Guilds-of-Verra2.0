@@ -28,6 +28,7 @@ public final class JournalScreen extends Screen {
     private static final int NODE_ROWS_PER_PAGE = 8;
     private static final int COLLECTION_ROWS_PER_PAGE = 8;
     private static final int BESTIARY_ROWS_PER_PAGE = 5;
+    private static final int UNLOCK_ROWS_PER_PAGE = 6;
     private static final int MAX_PRESTIGE = 5;
     private static final long ACTION_PENDING_MILLIS = 3_000L;
     private static final long PRESTIGE_CONFIRM_MILLIS = 5_000L;
@@ -92,7 +93,8 @@ public final class JournalScreen extends Screen {
             tabX = addTab(label, tabX, tabY, 70, () -> selectSkill(skill));
         }
         tabX = addTab("Collections", tabX, tabY, 82, () -> selectView(View.COLLECTIONS));
-        addTab("Gates", tabX, tabY, 58, () -> selectView(View.GATES));
+        tabX = addTab("Gates", tabX, tabY, 58, () -> selectView(View.GATES));
+        addTab("Unlocks", tabX, tabY, 66, () -> selectView(View.UNLOCKS));
 
         previousPage = addRenderableWidget(
             Button.builder(Component.literal("Previous"), button -> changePage(-1))
@@ -220,7 +222,7 @@ public final class JournalScreen extends Screen {
         if (previousPage == null || nextPage == null) {
             return;
         }
-        boolean pagedView = view == View.SKILL || view == View.COLLECTIONS;
+        boolean pagedView = view == View.SKILL || view == View.COLLECTIONS || view == View.UNLOCKS;
         previousPage.visible = pagedView;
         nextPage.visible = pagedView;
         previousPage.active = pagedView && page > 0;
@@ -491,7 +493,7 @@ public final class JournalScreen extends Screen {
     }
 
     private int treeViewportHeight() {
-        return Math.max(180, panelHeight() - 176);
+        return Math.max(180, panelHeight() - 180);
     }
 
     private int maxPage() {
@@ -511,6 +513,9 @@ public final class JournalScreen extends Screen {
             rowsPerPage = collectionSection == CollectionSection.BESTIARY
                 ? BESTIARY_ROWS_PER_PAGE
                 : COLLECTION_ROWS_PER_PAGE;
+        } else if (view == View.UNLOCKS) {
+            itemCount = ClientProfileCache.equipmentGates().size();
+            rowsPerPage = UNLOCK_ROWS_PER_PAGE;
         } else {
             return 0;
         }
@@ -559,6 +564,7 @@ public final class JournalScreen extends Screen {
             case SKILL -> drawSkillView(graphics, contentX, contentY, contentWidth);
             case COLLECTIONS -> drawCollections(graphics, contentX, contentY, contentWidth);
             case GATES -> drawGates(graphics, contentX, contentY, contentWidth);
+            case UNLOCKS -> drawUnlocks(graphics, contentX, contentY, contentWidth);
         }
     }
 
@@ -694,15 +700,24 @@ public final class JournalScreen extends Screen {
             resetTreeViewport();
         }
 
+        graphics.text(
+            font,
+            "Active passives: " + passiveSummary(selectedSkill),
+            x,
+            y + 13,
+            0xFF9DA8A2,
+            false
+        );
+
         int mapWidth = treeViewportWidth();
         int mapHeight = treeViewportHeight();
-        drawSpatialTree(graphics, x, y + 24, mapWidth, mapHeight, tree);
+        drawSpatialTree(graphics, x, y + 28, mapWidth, mapHeight, tree);
 
         int listX = x + mapWidth + 12;
         int listWidth = width - mapWidth - 12;
         int start = page * NODE_ROWS_PER_PAGE;
         int end = Math.min(tree.nodes().size(), start + NODE_ROWS_PER_PAGE);
-        int rowY = y + 24;
+        int rowY = y + 28;
         for (int index = start; index < end; index++) {
             drawCompactNodeRow(graphics, tree.nodes().get(index), listX, rowY, listWidth);
             rowY += 34;
@@ -1093,6 +1108,89 @@ public final class JournalScreen extends Screen {
         );
     }
 
+    private void drawUnlocks(GuiGraphicsExtractor graphics, int x, int y, int width) {
+        graphics.text(font, "Equipment and Elytra unlocks", x, y, 0xFFE4C775, false);
+        graphics.text(
+            font,
+            ClientProfileCache.unlockedEquipmentGateCount()
+                + "/" + ClientProfileCache.equipmentGateCount() + " unlocked",
+            x + width - 120,
+            y,
+            0xFFC9D2CC,
+            false
+        );
+
+        int passiveY = y + 18;
+        for (int index = 0; index < SKILLS.length; index++) {
+            String skill = SKILLS[index];
+            int column = index % 3;
+            int row = index / 3;
+            graphics.text(
+                font,
+                readable(skill) + ": " + ellipsize(passiveSummary(skill), 34),
+                x + column * Math.max(160, width / 3),
+                passiveY + row * 12,
+                0xFFB8C5BE,
+                false
+            );
+        }
+
+        int start = page * UNLOCK_ROWS_PER_PAGE;
+        int total = ClientProfileCache.equipmentGates().size();
+        int end = Math.min(total, start + UNLOCK_ROWS_PER_PAGE);
+        int rowY = y + 48;
+        for (int index = start; index < end; index++) {
+            JsonElement element = ClientProfileCache.equipmentGates().get(index);
+            if (!element.isJsonObject()) {
+                continue;
+            }
+            JsonObject gate = element.getAsJsonObject();
+            boolean unlocked = gate.has("unlocked") && gate.get("unlocked").getAsBoolean();
+            String id = gate.has("id") ? gate.get("id").getAsString() : "unknown";
+            String nodeId = gate.has("nodeId") ? gate.get("nodeId").getAsString() : "";
+            String skill = gate.has("skill") ? gate.get("skill").getAsString() : "";
+            int minimumLevel = gate.has("minimumLevel")
+                ? gate.get("minimumLevel").getAsInt()
+                : 0;
+            String effect = gate.has("effect") ? gate.get("effect").getAsString() : "";
+            int currentLevel = ClientProfileCache.level(skill);
+
+            graphics.fill(x, rowY, x + width, rowY + 34, unlocked ? 0xA02E4935 : 0x9A29312D);
+            graphics.text(font, readable(id), x + 8, rowY + 5, 0xFFF0F0E8, false);
+            graphics.text(
+                font,
+                unlocked ? "UNLOCKED" : "LOCKED",
+                x + width - 82,
+                rowY + 5,
+                unlocked ? 0xFF82C98B : 0xFFE08383,
+                false
+            );
+            graphics.text(
+                font,
+                readable(skill) + " Lv " + minimumLevel + " (current " + currentLevel + ")"
+                    + " • " + readable(nodeId),
+                x + 175,
+                rowY + 5,
+                currentLevel >= minimumLevel ? 0xFFB8C5BE : 0xFFD19A62,
+                false
+            );
+            graphics.text(
+                font,
+                ellipsize(effect, 92),
+                x + 8,
+                rowY + 18,
+                0xFF9DA8A2,
+                false
+            );
+            rowY += 38;
+        }
+
+        if (total == 0) {
+            graphics.text(font, "Unlock data is unavailable.", x, y + 60, 0xFF9DA8A2, false);
+        }
+        drawPageStatus(graphics, x, y + 302, width, "Equipment gates");
+    }
+
     private void drawGates(GuiGraphicsExtractor graphics, int x, int y, int width) {
         graphics.text(font, "Travel progression gates", x, y, 0xFFE4C775, false);
         drawGate(graphics, "Nether", "nether", x, y + 28, width);
@@ -1240,6 +1338,39 @@ public final class JournalScreen extends Screen {
         return element.isJsonPrimitive() ? element.getAsString() : null;
     }
 
+    private static String passiveSummary(String skill) {
+        JsonObject bonuses = ClientProfileCache.passiveBonuses(skill);
+        if (bonuses.size() == 0) {
+            return "None";
+        }
+
+        StringBuilder summary = new StringBuilder();
+        for (java.util.Map.Entry<String, JsonElement> entry : bonuses.entrySet()) {
+            if (!entry.getValue().isJsonPrimitive()) {
+                continue;
+            }
+            if (!summary.isEmpty()) {
+                summary.append(" • ");
+            }
+            double value = entry.getValue().getAsDouble();
+            summary.append(readable(entry.getKey()))
+                .append(' ')
+                .append(formatBonus(value));
+        }
+        return summary.isEmpty() ? "None" : summary.toString();
+    }
+
+    private static String formatBonus(double value) {
+        if (Math.abs(value) <= 1.0) {
+            long percentage = Math.round(value * 100.0);
+            return (percentage >= 0 ? "+" : "") + percentage + "%";
+        }
+        String formatted = String.format(java.util.Locale.ROOT, "%.2f", value)
+            .replaceAll("0+$", "")
+            .replaceAll("\\.$", "");
+        return (value >= 0 ? "+" : "") + formatted;
+    }
+
     private int panelWidth() {
         return Math.min(820, width - 24);
     }
@@ -1307,7 +1438,8 @@ public final class JournalScreen extends Screen {
         OVERVIEW,
         SKILL,
         COLLECTIONS,
-        GATES
+        GATES,
+        UNLOCKS
     }
 
     private enum CollectionSection {
