@@ -69,6 +69,43 @@ public final class EliteVariantRegistry {
         new EliteVariantDefinition(
             "voidstalker_enderman", "minecraft:enderman", "Voidstalker Enderman",
             1.10, 1.75, 1.12, 3.0, 0.35, 1.35, 4.5
+        ),
+
+        new EliteVariantDefinition(
+            "sporeguard_bogged", "minecraft:bogged", "Sporeguard Bogged",
+            1.06, 1.60, 0.92, 4.0, 0.20, 1.15, 3.4
+        ),
+        new EliteVariantDefinition(
+            "cave_stalker", "minecraft:cave_spider", "Cave Stalker",
+            1.12, 1.65, 1.12, 1.0, 0.15, 1.30, 3.6
+        ),
+        new EliteVariantDefinition(
+            "tempest_breeze", "minecraft:breeze", "Tempest Breeze",
+            1.12, 1.80, 1.10, 3.0, 0.30, 1.25, 4.0
+        ),
+        new EliteVariantDefinition(
+            "cinder_blaze", "minecraft:blaze", "Cinder Blaze",
+            1.12, 1.75, 1.0, 5.0, 0.25, 1.25, 4.0
+        ),
+        new EliteVariantDefinition(
+            "soulreaver_ghast", "minecraft:ghast", "Soulreaver Ghast",
+            1.18, 1.70, 0.92, 3.0, 0.20, 1.35, 4.4
+        ),
+        new EliteVariantDefinition(
+            "end_sentinel_shulker", "minecraft:shulker", "End Sentinel Shulker",
+            1.12, 1.90, 0.90, 8.0, 0.60, 1.20, 4.2
+        ),
+        new EliteVariantDefinition(
+            "swarmheart_silverfish", "minecraft:silverfish", "Swarmheart Silverfish",
+            1.28, 2.0, 1.10, 2.0, 0.30, 1.35, 3.8
+        ),
+        new EliteVariantDefinition(
+            "abyssal_guardian", "minecraft:guardian", "Abyssal Guardian",
+            1.15, 1.85, 0.92, 7.0, 0.55, 1.30, 4.3
+        ),
+        new EliteVariantDefinition(
+            "dreadwing_phantom", "minecraft:phantom", "Dreadwing Phantom",
+            1.22, 1.75, 1.15, 2.0, 0.20, 1.40, 4.0
         )
     );
 
