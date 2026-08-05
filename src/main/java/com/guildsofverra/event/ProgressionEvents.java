@@ -8,6 +8,7 @@ import com.guildsofverra.core.PlayerProfile;
 import com.guildsofverra.core.ProgressionChange;
 import com.guildsofverra.core.SkillId;
 import com.guildsofverra.data.ProfileManager;
+import com.guildsofverra.elite.EliteMobService;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -54,10 +55,19 @@ public final class ProgressionEvents {
 
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
             if (!(source.getEntity() instanceof ServerPlayer player) || entity == player) return;
+            double rewardAdjustment = EliteMobService.combatRewardAdjustment(entity);
             long bonus = Math.max(1L, Math.round(
-                entity.getMaxHealth() * ProgressionConfig.current().combatKillHealthXpMultiplier
+                entity.getMaxHealth()
+                    * ProgressionConfig.current().combatKillHealthXpMultiplier
+                    * rewardAdjustment
             ));
-            awardAndNotify(player, SkillId.COMBAT, bonus, "Enemy defeated", false);
+            awardAndNotify(
+                player,
+                SkillId.COMBAT,
+                bonus,
+                EliteMobService.isElite(entity) ? "Elite defeated" : "Enemy defeated",
+                false
+            );
         });
 
         ServerTickEvents.END_SERVER_TICK.register(server -> {
