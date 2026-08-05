@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.UUID;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityLevelChangeEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
@@ -145,13 +144,13 @@ public final class DimensionGateEvents {
         long now
     ) {
         ServerLevel overworld = server.overworld();
-        BlockPos spawn = overworld.getSharedSpawnPos();
-        int x = spawn.getX();
-        int z = spawn.getZ();
-        int y = Math.max(
-            spawn.getY(),
-            overworld.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) + 1
-        );
+        int x = 0;
+        int z = 0;
+        int y = overworld.getHeight(
+            Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+            x,
+            z
+        ) + 1;
 
         RETURN_GUARD_UNTIL.put(player.getUUID(), now + RETURN_GUARD_MILLIS);
         PENDING_RETURNS.put(
@@ -159,7 +158,7 @@ public final class DimensionGateEvents {
             new PendingReturn(
                 overworld,
                 x + 0.5,
-                y,
+                Math.max(overworld.getMinY() + 2, y),
                 z + 0.5,
                 player.getYRot(),
                 player.getXRot()
