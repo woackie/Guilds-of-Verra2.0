@@ -43,6 +43,7 @@ public final class GuildsOfVerraClient implements ClientModInitializer {
             client.execute(() -> {
                 ClientProfileCache.clear();
                 JournalActionFeedback.clear();
+                JournalClientActions.reset();
             })
         );
         JournalFeedbackOverlay.initialize();
