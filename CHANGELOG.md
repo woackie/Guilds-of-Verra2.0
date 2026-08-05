@@ -12,6 +12,7 @@
 - Upgraded the journal with XP bars, point totals, prestige and collection summaries.
 - Added tests for reward classification and passive-bonus resolution.
 - Preserved existing profiles and avoided retroactive XP from old vanilla statistics.
+- Verified Java 25/Fabric compilation, project validation and automated unit tests.
 
 ## 0.1.0-dev.2 — First playable build
 
