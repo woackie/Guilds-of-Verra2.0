@@ -1,10 +1,11 @@
 # Guilds of Verra 0.1.0-dev.6 — Expanded Encounters
 
-This stacked milestone expands elite encounters without changing the frozen dev.5 test candidate.
+This stacked milestone expands survival encounters without changing the frozen dev.5 test candidate.
 
-## Complete 25-variant roster
+## Complete 25-variant elite roster
 
 ### Original seven
+
 - Tank Zombie
 - Bulwark Drowned
 - Armoured Skeleton
@@ -15,126 +16,160 @@ This stacked milestone expands elite encounters without changing the frozen dev.
 
 ### Expansion wave one
 
-#### Overworld and raids
-- **Plague Husk** — desert disease elite that inflicts Hunger and Poison.
-- **Frostbound Stray** — snow-biome control elite that applies Slowness and freezing pressure.
-- **Hexbinder Witch** — tougher support caster that inflicts Weakness and Darkness.
-- **Raid Captain Pillager** — armoured crossbow commander with Weakness on hit.
-- **Ironhide Ravager** — rare raid tank with heavy knockback resistance and impact Slowness.
-
-#### Nether
-- **Berserker Piglin** — fast melee glass cannon with high damage and limited armour.
-- **Ashen Wither Skeleton** — durable fortress elite with a longer Wither effect.
-- **Magma Colossus** — oversized magma cube with strong knockback resistance and fire pressure.
-
-#### End
-- **Voidstalker Enderman** — fast, durable End-only elite that blinds struck targets.
+- Plague Husk
+- Frostbound Stray
+- Hexbinder Witch
+- Raid Captain Pillager
+- Ironhide Ravager
+- Berserker Piglin
+- Ashen Wither Skeleton
+- Magma Colossus
+- Voidstalker Enderman
 
 ### Expansion wave two
 
-#### Swamps, caves and structures
-- **Sporeguard Bogged** — swamp archer that combines Poison and Slowness.
-- **Cave Stalker** — mineshaft ambusher that combines Poison and Blindness.
-- **Tempest Breeze** — trial-chamber controller that briefly levitates struck targets.
-- **Swarmheart Silverfish** — stronghold disruption elite that applies Weakness and Mining Fatigue.
+- Sporeguard Bogged
+- Cave Stalker
+- Tempest Breeze
+- Cinder Blaze
+- Soulreaver Ghast
+- End Sentinel Shulker
+- Swarmheart Silverfish
+- Abyssal Guardian
+- Dreadwing Phantom
 
-#### Ocean and nighttime encounters
-- **Abyssal Guardian** — monument elite that applies Darkness and Slowness.
-- **Dreadwing Phantom** — nighttime aerial elite that applies Blindness and Weakness.
-
-#### Nether and End structures
-- **Cinder Blaze** — fortress ranged elite that ignites and weakens targets.
-- **Soulreaver Ghast** — Nether-sky artillery elite that applies Wither.
-- **End Sentinel Shulker** — End-city defender that combines ordinary levitation pressure with Weakness.
+All variants use the shared Adventurer-level scaling, nearby/regional budgets, Combat XP, first-discovery Exploration XP and hidden-safe bestiary systems. Voidstalker Endermen are explicitly restricted to the End.
 
 ## Player Hunt Event
 
-A separate configurable encounter periodically selects an eligible player and sends a hostile pack to track them down.
+A separate personal event periodically selects an eligible player and sends a hostile pack to track them down.
 
-### Runtime flow
-- A warning announces that a hostile pack has found the player's trail.
-- After a configurable delay, the pack spawns in a 40–64 block ring around the player.
-- Pack size begins at five and scales with Adventurer Level up to ten by default.
-- Every second, surviving members reacquire the selected player and refresh their path toward them.
-- The event ends when the entire pack is defeated, the timer expires, the target dies, disconnects, changes dimension, becomes ineligible, or the hunters exceed the pursuit distance.
-- Remaining event mobs are discarded during cancellation, timeout and server shutdown.
+- Begins at Adventurer Level 15 by default.
+- Checks every 30 seconds with a 1.5% chance per eligible check.
+- Uses a 60-minute default per-player cooldown.
+- Warns the player five seconds before spawning.
+- Spawns five mobs initially and scales to ten with Adventurer Level.
+- Uses a 40–64 block safe spawn ring.
+- Reacquires and navigates toward its selected player every second.
+- Uses separate Overworld, Nether and End hostile pools.
+- Ends on victory, timeout, death, disconnect, dimension change, ineligibility or pursuit-distance breach.
+- Cleans up loaded and later-reloaded orphaned hunters.
+- Hunt members cannot become elites or consume elite budgets.
 
-### Safety and multiplayer limits
-- One active or pending hunt per player.
-- Configurable global concurrent-hunt cap.
-- Per-player cooldown prevents repeated attacks.
-- Creative and spectator players are excluded by default.
-- Spawn searches require loaded chunks, solid ground and two blocks of free space.
-- Hunt members are excluded from normal elite conversion and elite spawn budgets.
-- Overworld, Nether and End use separate mobile hostile pools.
+Configuration: `config/guildsofverra/hunt_events.json`.
 
-### Configuration
-The event generates `config/guildsofverra/hunt_events.json`, including:
-- trigger chance and check interval;
-- minimum Adventurer Level;
-- warning delay and player cooldown;
-- minimum/maximum pack size and level scaling;
-- spawn distance and attempts;
-- duration, pursuit distance, retarget interval and pathing speed;
-- global active-event cap;
-- dimension toggles and creative-player eligibility.
+## Seven survival world events
 
-## Shared systems
-- All 25 variants remain configurable through `config/guildsofverra/elites.json`.
-- Existing nearby and regional elite budgets apply to every variant.
-- Adventurer-level scaling and reward caps remain authoritative.
-- Every variant has a persistent bestiary discovery and first-discovery reward.
-- Variant-specific equipment and effects remain server authoritative.
-- Voidstalker Endermen are explicitly restricted to the End.
-- New variants and Hunt Events must not modify the frozen dev.5 artifact or `main`.
+World events use one server-wide scheduler. A pending or active world event blocks every other world event, preventing combinations such as Blood Moon plus Long Night. Hunt Events remain a separate personal system.
 
-## Automated validation requirements
-- Registry contains exactly 25 unique elite IDs.
-- Every registered variant resolves to a supported vanilla entity identifier.
-- Shared-base roles remain deterministic.
-- Voidstalker End filtering remains enforced.
-- All ability configuration values normalize to non-negative values.
-- Existing seven elite variants remain compatible.
-- Hunt eligibility, cooldown, trigger chance and pack scaling tests pass.
-- Java 25/Fabric compilation, automated tests and artifact packaging pass.
+### Shared pacing
 
-## Runtime verification
+- Minimum Adventurer Level 10 by default.
+- Thirty-minute startup grace period.
+- One scheduling check per minute.
+- Three-percent chance per eligible check.
+- Fifteen-second warning.
+- At least 60 minutes after an event ends before another world event can begin.
+- Weighted selection allows individual events to be disabled or made rarer.
+- Event mobs use strict per-player caps and remain outside elite conversion/budgets.
+- Event mobs are cleaned up when an event ends and when orphaned mobs later reload.
 
-### Ten-minute roster smoke test
-1. Temporarily increase `baseSpawnChance` and lower `minimumAdventurerLevel` in `elites.json`.
-2. Confirm existing original elites still spawn and retain their previous behaviour.
-3. Spawn or locate each supported base entity and confirm the expected elite name can appear.
-4. Verify the bestiary total reports 25 entries.
-5. Defeat one new variant and confirm discovery, Exploration XP and persistence.
+### Blood Moon
 
-### Hunt Event checks
-1. Temporarily set `triggerChancePerCheck` to `1.0`, `checkIntervalSeconds` to `5`, `warningSeconds` to `3` and `playerCooldownMinutes` to `1`.
-2. Confirm the warning occurs before any pack member appears.
-3. Confirm mobs spawn 40–64 blocks away on safe loaded terrain.
-4. Confirm the announced member count matches the successfully spawned pack.
-5. Run away and verify the pack repeatedly reacquires and pursues the selected player.
-6. Kill the whole pack and verify the victory message fires once.
-7. Test timeout, death, disconnect and dimension-change cleanup.
-8. Test two eligible players with the global cap set to one and then two.
-9. Confirm Hunt Event mobs do not become elites or consume elite caps.
-10. Confirm disabling `hunt_events.json` removes active event mobs and stops scheduling.
+- Available while eligible players occupy the Overworld.
+- Holds the Overworld clock around midnight.
+- Nearby hostile monsters receive short refreshed Speed and Strength effects.
+- Idle monsters acquire nearby eligible players more aggressively.
+- Default duration: ten minutes.
 
-### Expansion wave two checks
-- Bogged: Poison and Slowness.
-- Cave Spider: Poison and Blindness.
-- Breeze: short Levitation without excessive fall-lock chains.
-- Blaze: fire duration and Weakness.
-- Ghast: Wither applies when its projectile damages a target.
-- Shulker: Weakness applies from projectile damage.
-- Silverfish: Weakness and Mining Fatigue.
-- Guardian: Darkness and Slowness from beam damage.
-- Phantom: Blindness and Weakness during dive attacks.
+### Severe Thunderstorm
 
-### Balance and stability
-- Natural spawning and rarity in the correct dimensions, structures and conditions.
-- Visual scale, names, equipment and role readability.
-- Ability duration and counterplay.
-- Bestiary discovery persistence and multiplayer isolation.
-- Nearby/regional spawn-budget behaviour with the 25-entry registry.
-- Hunt frequency, pack size, pursuit pressure and cleanup behaviour.
-- Tick-time performance around active hunts, raids, monuments, strongholds and mob-heavy Nether areas.
+- Available while eligible players occupy the Overworld.
+- Forces rain and thunder through the server-owned weather system.
+- Periodically rolls configurable lightning strikes in a radius around eligible players.
+- Clears the forced storm when the event ends.
+- Default duration: eight minutes.
+
+### Cave Tremor
+
+- Available only when an eligible Overworld player is underground at Y 48 or lower without sky access.
+- Applies short Mining Fatigue pulses.
+- Spawns bounded Silverfish and Cave Spider hazards around underground players.
+- Does not destroy terrain, ores, tunnels or player builds.
+- Default duration: six minutes.
+
+### Nether Surge
+
+- Available while eligible players occupy the Nether.
+- Applies short Darkness pressure.
+- Spawns bounded Blaze, Magma Cube, Piglin Brute and Wither Skeleton waves.
+- Refreshes Speed and Fire Resistance on nearby Nether monsters.
+- Default duration: seven minutes.
+
+### Predator Migration
+
+- Available while eligible players occupy the Overworld.
+- Spawns bounded Spider, Cave Spider and Wolf groups farther from players.
+- Sends those groups through occupied regions rather than placing them directly beside players.
+- Default duration: five minutes.
+
+### Long Night
+
+- Available while eligible players occupy the Overworld.
+- Holds the Overworld clock around midnight using Minecraft 26.2 world clocks.
+- Sleeping cannot permanently skip the event because the event restores midnight while active.
+- Moves the clock toward dawn when the event ends.
+- Default duration: twelve minutes.
+
+### Restless Dead
+
+- Available whenever at least one eligible player is online.
+- Supported slain undead have a configurable 25% chance to return after five seconds.
+- Zombies, Zombie Villagers, Husks, Drowned, Skeletons, Strays, Wither Skeletons and Zombified Piglins are supported.
+- Revived undead are tagged and cannot revive a second time.
+- Pending revivals are capped and cancelled at event end.
+- Default duration: seven minutes.
+
+Configuration: `config/guildsofverra/world_events.json`.
+
+## Automated validation
+
+- Exactly 25 unique elite IDs.
+- Supported vanilla base-entity coverage and End-only filtering.
+- Elite spawn chance, scaling, budgets and reward calculations.
+- Hunt eligibility, probability, cooldown and pack scaling.
+- World-event player eligibility, trigger probability, cooldowns, weighted selection and spawn caps.
+- World-event configuration defaults and unsafe-value normalization.
+- Java 25/Fabric client and server compilation.
+- Automated tests and artifact packaging.
+
+## Runtime verification still required
+
+### Elite encounters
+
+- Natural rarity and biome/dimension identity.
+- Visual scale, names and equipment.
+- Melee and projectile-triggered abilities.
+- Bestiary total, discoveries, rewards and multiplayer isolation.
+- Nearby/regional caps and performance.
+
+### Hunt Event
+
+- Warning and announced member count.
+- Safe 40–64 block ring spawning.
+- Pursuit pressure and path refresh.
+- Victory, timeout, death, disconnect and dimension cleanup.
+- Chunk-unload/reload cleanup.
+- Multiplayer selection and global concurrency.
+
+### World events
+
+- Minecraft 26.2 clock behavior during Blood Moon and Long Night.
+- Weather start/end and lightning safety during Severe Thunderstorm.
+- Underground eligibility and bounded hazards during Cave Tremor.
+- Nether-only waves and buffs during Nether Surge.
+- Predator navigation and event-mob caps.
+- One-time undead revival and pending-revival cleanup.
+- One-world-event exclusivity, frequency and ordinary survival performance.
+
+Use `WORLD_EVENT_TESTING.md` for the rapid test configuration and detailed checks.
