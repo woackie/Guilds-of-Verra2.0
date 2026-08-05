@@ -2,6 +2,7 @@ package com.guildsofverra.client;
 
 import com.guildsofverra.network.PrestigePayload;
 import com.guildsofverra.network.PurchaseNodePayload;
+import com.guildsofverra.network.SelectTitlePayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 
 public final class JournalClientActions {
@@ -37,6 +38,18 @@ public final class JournalClientActions {
 
         nextActionAt = now + ACTION_COOLDOWN_MILLIS;
         ClientPlayNetworking.send(new PrestigePayload(skill));
+        return true;
+    }
+
+    public static boolean selectTitle(String titleId) {
+        long now = System.currentTimeMillis();
+        String normalized = titleId == null ? "" : titleId.trim();
+        if (!allowAction(now) || !ClientPlayNetworking.canSend(SelectTitlePayload.TYPE)) {
+            return false;
+        }
+
+        nextActionAt = now + ACTION_COOLDOWN_MILLIS;
+        ClientPlayNetworking.send(new SelectTitlePayload(normalized));
         return true;
     }
 
