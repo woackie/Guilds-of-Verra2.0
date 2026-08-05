@@ -2,6 +2,9 @@ package com.guildsofverra.restriction;
 
 import com.guildsofverra.core.RequirementResult;
 import com.guildsofverra.data.ProfileManager;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.function.BiFunction;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
@@ -14,6 +17,9 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 
 public final class RestrictionEvents {
+    private static final long DENIAL_COOLDOWN_MILLIS = 1_500L;
+    private static final Map<UUID, DenialNotice> LAST_DENIAL = new HashMap<>();
+
     private RestrictionEvents() {}
 
     public static void initialize() {
@@ -54,8 +60,23 @@ public final class RestrictionEvents {
     ) {
         RequirementResult result = check.apply(ProfileManager.get(player), stack);
         if (!result.allowed()) {
-            player.sendSystemMessage(Component.literal("Locked: " + result.reason()));
+            sendDenial(player, result.reason());
         }
         return result.allowed();
     }
+
+    private static void sendDenial(ServerPlayer player, String reason) {
+        long now = System.currentTimeMillis();
+        DenialNotice previous = LAST_DENIAL.get(player.getUUID());
+        if (previous != null
+            && previous.reason().equals(reason)
+            && now - previous.timestamp() < DENIAL_COOLDOWN_MILLIS) {
+            return;
+        }
+
+        LAST_DENIAL.put(player.getUUID(), new DenialNotice(reason, now));
+        player.sendSystemMessage(Component.literal("Locked — " + reason));
+    }
+
+    private record DenialNotice(String reason, long timestamp) {}
 }
