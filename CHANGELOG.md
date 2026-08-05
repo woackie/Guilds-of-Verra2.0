@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.1.0-dev.4 — Progression Gates & Elite Encounters
+
+- Replaced raw restriction IDs with readable node, skill and level requirements.
+- Added cooldowns so repeated blocked actions and portal attempts do not flood chat.
+- Added recurring server-side armour and Elytra audits to close save, command and mod bypasses.
+- Stopped unauthorized Elytra flight and safely returned removed equipment to inventory or the world.
+- Added safe Nether and End returns using pre-portal position history and transfer-loop protection.
+- Added complete dimension requirement summaries and exposed gate state to the synchronized profile payload.
+- Added generated elite configuration at `config/guildsofverra/elites.json`.
+- Added seven vanilla-themed elite roles with scaling, names, equipment and configurable spawn budgets.
+- Added Venom Spider poison, Marksman Skeleton slowness, Bulwark Drowned weakness and Volatile Creeper fire effects.
+- Added configurable elite Combat XP scaling and first-discovery Exploration XP.
+- Added persistent bestiary discoveries for the first defeated elite of each variant.
+- Expanded client synchronization with discovery/title IDs, selected title, dimension gates and hidden-safe bestiary data.
+- Added unit tests for requirement text, safe returns, elite spawn rules, scaling, caps and reward calculations.
+- Verified project validation, Java 25/Fabric compilation, tests and artifact packaging in CI.
+
 ## 0.1.0-dev.3 — Core Progression Expansion
 
 - Added server-side Fishing XP for fish, treasure, junk and unclassified catches.
