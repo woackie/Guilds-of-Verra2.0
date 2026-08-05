@@ -1,39 +1,42 @@
-# Development status — 0.1.0-dev.1
+# Development status — 0.1.0-dev.3
 
-## Implemented in this snapshot
+## Implemented and compiling in this snapshot
 
 - Complete Minecraft 26.2 Fabric/Gradle project structure.
 - Five skills: Exploration, Fishing, Cooking, Mining and Combat.
-- Level 0–100 progression and approved XP formula.
-- One permanent point per newly reached level.
-- Adventurer Level calculated from highest-ever levels.
-- Immutable, codec-backed player profile for Fabric Data Attachments.
-- Profile persistence, copy-on-death and client synchronization.
+- Level 0–100 progression, prestige and approved XP formula.
+- Permanent skill points and Adventurer Level from highest-ever levels.
+- Persistent, synchronized player profiles through Fabric Data Attachments.
 - Data-driven loading of all five 100-point skill trees.
-- Server-side node purchase and prestige request handling.
-- Administrative `/gv` command foundation.
-- Hard-lock requirement engine and item-tag mappings.
-- Nether, End and Elytra requirement definitions.
-- Basic mining, combat and exploration XP event hooks.
-- Basic equipment-use/equip enforcement hooks.
-- Vanilla-themed elite variant definitions and conversion service foundation.
-- Discovery/title definitions and player-profile storage.
-- Basic journal screen and `J` key binding.
+- Server-side node purchase, prestige and administrative `/gv` commands.
+- Hard-lock requirement engine, item mappings and dimension requirements.
+- Mining, Combat and Exploration XP event coverage.
+- Fishing XP classified as fish, treasure, junk or fallback catches.
+- Cooking XP from collected cooked and prepared food statistics.
+- Generated progression configuration for XP values and feedback settings.
+- First functional purchased-node passives: ore XP, extra fish and extra cooked output.
+- Improved journal with XP bars, point totals, prestige and collection summaries.
+- Vanilla-themed elite variant definitions and conversion foundation.
 - Default English and Dutch language files.
-- Unit tests and standalone project validator.
-- GitHub Actions build workflow using Java 25.
+- Unit tests, standalone data validation and Java 25 GitHub Actions builds.
 
-## Deliberately incomplete before the first playable release
+## Requires in-game verification for dev.3
 
-These systems need a real Minecraft 26.2 compile/run pass and in-game testing before they can be called finished:
+- Fishing category detection across normal, enchanted and unusual catches.
+- Cooking statistics across furnaces, smokers, campfires and crafting recipes.
+- Extra-fish and extra-cooked-output passive probabilities.
+- Generated configuration creation and edited-value loading.
+- Journal layout at small and ultrawide resolutions.
+- Multiplayer isolation for all new progression statistics.
 
-- Final event coverage for every Fishing and Cooking XP source.
+## Deliberately incomplete before the first beta
+
 - Persistent placed-ore anti-exploit tracking across chunk unloads.
-- Full passive-bonus application for every tree node.
-- Final journal tree rendering, discoveries browser and settings pages.
-- Final elite equipment/visual variation and spawn-budget tuning.
+- Passive-bonus application for every remaining tree-node bonus type.
+- Interactive journal tree rendering, node purchasing, discoveries and settings pages.
+- Final elite equipment, visual variation and spawn-budget tuning.
 - Full title presentation integrations.
 - Config hot reload and detailed validation diagnostics.
 - GameTests for hard-lock bypass attempts and dimension return safety.
 
-The repository is intentionally versioned as a development snapshot rather than falsely labelled a complete v1 release.
+The project remains a development snapshot until the runtime checklist and longer survival-world balance tests pass.
