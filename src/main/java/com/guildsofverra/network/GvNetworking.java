@@ -59,6 +59,9 @@ public final class GvNetworking {
                 sync(player, ProfileManager.get(player));
             }
         );
+        ServerPlayConnectionEvents.DISCONNECT.register(
+            (listener, server) -> LAST_JOURNAL_ACTION.remove(listener.getPlayer().getUUID())
+        );
     }
 
     public static void sync(ServerPlayer player, PlayerProfile profile) {
