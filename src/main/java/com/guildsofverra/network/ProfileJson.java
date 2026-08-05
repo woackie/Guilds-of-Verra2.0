@@ -11,7 +11,9 @@ import com.guildsofverra.core.SkillId;
 import com.guildsofverra.core.SkillProgress;
 import com.guildsofverra.elite.EliteMobService;
 import com.guildsofverra.elite.EliteVariantDefinition;
+import com.guildsofverra.journal.JournalSummaryService;
 import com.guildsofverra.world.DimensionGateService;
+import java.util.Map;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 
@@ -22,11 +24,12 @@ public final class ProfileJson {
 
     public static String toJson(PlayerProfile profile) {
         JsonObject root = new JsonObject();
-        root.addProperty("version", "0.1.0-dev.4");
-        root.addProperty("payloadVersion", 2);
+        root.addProperty("version", "0.1.0-dev.5");
+        root.addProperty("payloadVersion", 3);
         root.addProperty("adventurerLevel", profile.adventurerLevel());
 
         JsonObject skills = new JsonObject();
+        JsonObject passiveBonuses = new JsonObject();
         for (SkillId id : SkillId.values()) {
             SkillProgress progress = profile.skill(id);
             int spent = profile.spentPoints(id, GvContent.tree(id));
@@ -39,8 +42,19 @@ public final class ProfileJson {
             skill.addProperty("spentPoints", spent);
             skill.addProperty("availablePoints", Math.max(0, progress.earnedPoints() - spent));
             skills.add(id.serializedName(), skill);
+
+            JsonObject skillBonuses = new JsonObject();
+            for (Map.Entry<String, Double> bonus : JournalSummaryService.passiveBonuses(
+                profile,
+                id,
+                GvContent.tree(id)
+            ).entrySet()) {
+                skillBonuses.addProperty(bonus.getKey(), bonus.getValue());
+            }
+            passiveBonuses.add(id.serializedName(), skillBonuses);
         }
         root.add("skills", skills);
+        root.add("passiveBonuses", passiveBonuses);
 
         JsonArray nodes = new JsonArray();
         profile.purchasedNodes().stream().sorted().forEach(nodes::add);
@@ -62,6 +76,31 @@ public final class ProfileJson {
         addGate(gates, "nether", profile, Level.NETHER);
         addGate(gates, "end", profile, Level.END);
         root.add("dimensionGates", gates);
+
+        JsonArray equipmentGates = new JsonArray();
+        int unlockedEquipmentGates = 0;
+        for (JournalSummaryService.EquipmentGate summary :
+            JournalSummaryService.equipmentGates(profile)) {
+            JsonObject gate = new JsonObject();
+            gate.addProperty("id", summary.id());
+            gate.addProperty("nodeId", summary.nodeId());
+            gate.addProperty("unlocked", summary.unlocked());
+            gate.addProperty("skill", summary.skill());
+            gate.addProperty("minimumLevel", summary.minimumLevel());
+            gate.addProperty("cost", summary.cost());
+            gate.addProperty("category", summary.category());
+            gate.addProperty("effect", summary.effect());
+            JsonArray prerequisites = new JsonArray();
+            summary.prerequisites().forEach(prerequisites::add);
+            gate.add("prerequisites", prerequisites);
+            equipmentGates.add(gate);
+            if (summary.unlocked()) {
+                unlockedEquipmentGates++;
+            }
+        }
+        root.add("equipmentGates", equipmentGates);
+        root.addProperty("equipmentGateCount", equipmentGates.size());
+        root.addProperty("unlockedEquipmentGateCount", unlockedEquipmentGates);
 
         JsonObject bestiary = new JsonObject();
         bestiary.addProperty("total", EliteMobService.variants().size());
