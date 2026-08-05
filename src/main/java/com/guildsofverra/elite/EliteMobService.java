@@ -145,10 +145,6 @@ public final class EliteMobService {
             : "guildsofverra:" + variantId;
     }
 
-    /**
-     * Adjusts reward math because elite max health has already been multiplied.
-     * Applying this to max-health-based XP produces the configured total XP multiplier.
-     */
     public static double combatRewardAdjustment(LivingEntity entity) {
         EliteVariantDefinition variant = variant(variantId(entity));
         if (variant == null) {
