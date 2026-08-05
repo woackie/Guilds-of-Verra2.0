@@ -6,9 +6,9 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
 
 public final class GuildsOfVerraClient implements ClientModInitializer {
@@ -39,11 +39,19 @@ public final class GuildsOfVerraClient implements ClientModInitializer {
                 )
             )
         );
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) ->
+            client.execute(() -> {
+                ClientProfileCache.clear();
+                JournalActionFeedback.clear();
+            })
+        );
         JournalFeedbackOverlay.initialize();
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (openJournal.consumeClick()) {
-                Minecraft.getInstance().setScreenAndShow(new JournalScreen());
+                if (client.player != null) {
+                    client.setScreenAndShow(new JournalScreen());
+                }
             }
         });
     }
