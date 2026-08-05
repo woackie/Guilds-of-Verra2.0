@@ -4,15 +4,15 @@ A lightweight, standalone, configurable Fabric progression mod for Minecraft Jav
 
 ## Current snapshot
 
-`0.1.0-dev.5` is the interactive-journal test candidate stacked on the verified dev.4 gate and elite foundation.
+`0.1.0-dev.5` remains the frozen interactive-journal test candidate stacked on the verified dev.4 gate and elite foundation.
 
-It adds spatial five-skill tree maps, prerequisite paths, pan and zoom controls, server-authoritative node purchasing and prestige, paged titles/discoveries/bestiary collections, active passive summaries, live dimension requirements, and a sixteen-entry equipment/Elytra unlock catalogue.
+The stacked `0.1.0-dev.6` development branch expands encounters to twenty-five vanilla-themed elite variants and adds configurable player-targeted Hunt Events. Hunt Events warn an eligible player, spawn a scaled hostile pack farther away, repeatedly retarget the selected player, and clean up safely after victory, timeout, death, disconnect, dimension changes or server shutdown.
 
-The underlying mod includes all five 100-point skill trees, persistent player profiles, Mining/Combat/Exploration/Fishing/Cooking progression, purchased-node passives, hard equipment locks, safe dimension gates, configurable elite encounters, discoveries, titles and administrative commands.
+The underlying mod includes all five 100-point skill trees, persistent player profiles, Mining/Combat/Exploration/Fishing/Cooking progression, purchased-node passives, hard equipment locks, safe dimension gates, configurable elite encounters, discoveries, titles, an interactive journal and administrative commands.
 
-`main` remains the latest promoted playable build. Dev.5 remains a stacked development candidate until dev.3/dev.4 runtime feedback is carried forward and the complete checklist passes.
+`main` remains the latest promoted playable build. Dev.5 remains the prepared runtime-test candidate; dev.6 remains stacked on dev.5 and must not replace the frozen dev.5 artifact during its testing session.
 
-See [DEVELOPMENT_STATUS.md](DEVELOPMENT_STATUS.md) for exact implementation status. Use [TESTING_CHECKLIST.md](TESTING_CHECKLIST.md) for the prioritized dev.5 playtest and [RUNTIME_TEST_REPORT.md](RUNTIME_TEST_REPORT.md) to record problems consistently.
+See [DEVELOPMENT_STATUS.md](DEVELOPMENT_STATUS.md) for exact implementation status. Use [TESTING_CHECKLIST.md](TESTING_CHECKLIST.md) for the prioritized dev.5 playtest, [RUNTIME_TEST_REPORT.md](RUNTIME_TEST_REPORT.md) to record problems consistently, and [MILESTONE_DEV_6.md](MILESTONE_DEV_6.md) for the elite/Hunt Event checklist.
 
 ## Requirements
 
@@ -28,9 +28,10 @@ The mod generates:
 ```text
 config/guildsofverra/progression.json
 config/guildsofverra/elites.json
+config/guildsofverra/hunt_events.json
 ```
 
-`progression.json` controls skill XP rewards and progression feedback. `elites.json` controls elite rarity, nearby and regional caps, stat scaling, reward scaling, first-discovery XP, visible names and special-ability durations. Restart Minecraft after editing either file.
+`progression.json` controls skill XP rewards and progression feedback. `elites.json` controls elite rarity, nearby and regional caps, stat scaling, reward scaling, first-discovery XP, visible names and special-ability durations. `hunt_events.json` controls event chance, eligibility, warning delay, cooldowns, pack scaling, spawn distance, pursuit behaviour, duration, dimension availability and global concurrency. Restart Minecraft after editing a configuration file.
 
 ## Journal controls
 
@@ -70,4 +71,4 @@ The remapped mod JAR is written to `build/libs/`.
 python scripts/validate_project.py
 ```
 
-This validates JSON, skill-point totals, node prerequisites, XP monotonicity and default progression rules. The Gradle test suite additionally checks progression services, elite rules, safe returns, spatial tree layout, viewport behavior, summaries and language-key parity.
+This validates JSON, skill-point totals, node prerequisites, XP monotonicity and default progression rules. The Gradle test suite additionally checks progression services, elite rules, Hunt Event eligibility/scaling, safe returns, spatial tree layout, viewport behavior, summaries and language-key parity.
