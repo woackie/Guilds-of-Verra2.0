@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.1.0-dev.5 — Interactive Journal & Collections
+
+- Added clickable Overview, five skill, Collections, Gates and Unlocks journal tabs.
+- Added a spatial skill-tree map with deterministic category lanes and prerequisite connection paths.
+- Added bounded tree panning and zoom levels from 50% to 175%.
+- Added real purchased, purchasable, level-locked, prerequisite-locked and point-locked node states.
+- Added server-authoritative node purchasing directly from the journal with client/server rate limits.
+- Added pending-request protection and immediate profile synchronization after successful purchases.
+- Added prestige eligibility information, reset-consequence text and a two-step confirmation flow.
+- Added server-authoritative prestige handling and synchronized confirmation state.
+- Added separate Titles, Discoveries and Bestiary collection sections with independent paging.
+- Added server-authoritative active-title selection and clear-title support.
+- Added hidden-safe elite bestiary entries that reveal details only after discovery.
+- Added active passive-bonus summaries derived from purchased skill-tree nodes.
+- Added a synchronized catalogue for sixteen tool, weapon, shield, armour and Elytra unlock gates.
+- Added live Nether and End requirement summaries and current eligibility.
+- Upgraded the synchronized profile payload to schema version 3.
+- Added a dedicated clientbound journal-action result payload for success, denial and rate-limit feedback.
+- Expanded English and Belgian-Dutch journal vocabulary and added an automated translation-parity test.
+- Added deterministic spatial-layout, prerequisite-edge, pan-bound, zoom-anchor, title-selection and passive-summary tests.
+- Preserved compatibility with existing dev.2, dev.3 and dev.4 player profiles.
+- Verified project validation, Java 25/Fabric compilation, automated tests and artifact packaging in CI.
+
 ## 0.1.0-dev.4 — Progression Gates & Elite Encounters
 
 - Replaced raw restriction IDs with readable node, skill and level requirements.
