@@ -5,6 +5,7 @@ import com.guildsofverra.core.PlayerProfile;
 import com.guildsofverra.core.ProgressionService;
 import com.guildsofverra.core.PurchaseResult;
 import com.guildsofverra.core.SkillId;
+import com.guildsofverra.core.TitleSelectionService;
 import com.guildsofverra.data.ProfileManager;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,7 +21,10 @@ public final class GvNetworking {
     private static final long JOURNAL_ACTION_COOLDOWN_MILLIS = 250L;
     private static final int MAX_SKILL_ID_LENGTH = 24;
     private static final int MAX_NODE_ID_LENGTH = 96;
+    private static final int MAX_TITLE_ID_LENGTH = 128;
     private static final Pattern SAFE_ID = Pattern.compile("[a-z0-9_]+", Pattern.CASE_INSENSITIVE);
+    private static final Pattern SAFE_RESOURCE_ID =
+        Pattern.compile("[a-z0-9_:\\-]+", Pattern.CASE_INSENSITIVE);
     private static final Map<UUID, Long> LAST_JOURNAL_ACTION = new HashMap<>();
 
     private GvNetworking() {}
@@ -29,6 +33,7 @@ public final class GvNetworking {
         PayloadTypeRegistry.clientboundPlay().register(ProfileSyncPayload.TYPE, ProfileSyncPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(PurchaseNodePayload.TYPE, PurchaseNodePayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(PrestigePayload.TYPE, PrestigePayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(SelectTitlePayload.TYPE, SelectTitlePayload.CODEC);
 
         ServerPlayNetworking.registerGlobalReceiver(
             PurchaseNodePayload.TYPE,
@@ -37,6 +42,10 @@ public final class GvNetworking {
         ServerPlayNetworking.registerGlobalReceiver(
             PrestigePayload.TYPE,
             (payload, context) -> prestige(context.player(), payload)
+        );
+        ServerPlayNetworking.registerGlobalReceiver(
+            SelectTitlePayload.TYPE,
+            (payload, context) -> selectTitle(context.player(), payload)
         );
 
         ServerPlayConnectionEvents.JOIN.register(
@@ -71,11 +80,7 @@ public final class GvNetworking {
                 payload.node(),
                 GvContent.tree(skill)
             );
-            if (result.success()) {
-                player.setAttached(com.guildsofverra.data.GvAttachments.PROFILE, result.profile());
-                sync(player, result.profile());
-            }
-            player.sendSystemMessage(Component.literal(result.message()));
+            applyResult(player, result);
         }, () -> player.sendSystemMessage(Component.literal("Unknown skill: " + payload.skill())));
     }
 
@@ -90,12 +95,33 @@ public final class GvNetworking {
 
         SkillId.parse(payload.skill()).ifPresentOrElse(skill -> {
             PurchaseResult result = ProgressionService.prestige(ProfileManager.get(player), skill, 5);
-            if (result.success()) {
-                player.setAttached(com.guildsofverra.data.GvAttachments.PROFILE, result.profile());
-                sync(player, result.profile());
-            }
-            player.sendSystemMessage(Component.literal(result.message()));
+            applyResult(player, result);
         }, () -> player.sendSystemMessage(Component.literal("Unknown skill: " + payload.skill())));
+    }
+
+    private static void selectTitle(ServerPlayer player, SelectTitlePayload payload) {
+        if (!allowJournalAction(player)) {
+            return;
+        }
+
+        String titleId = payload.titleId() == null ? "" : payload.titleId().trim();
+        if (!titleId.isEmpty()
+            && (titleId.length() > MAX_TITLE_ID_LENGTH
+                || !SAFE_RESOURCE_ID.matcher(titleId).matches())) {
+            player.sendSystemMessage(Component.literal("Invalid journal title request."));
+            return;
+        }
+
+        PurchaseResult result = TitleSelectionService.select(ProfileManager.get(player), titleId);
+        applyResult(player, result);
+    }
+
+    private static void applyResult(ServerPlayer player, PurchaseResult result) {
+        if (result.success()) {
+            player.setAttached(com.guildsofverra.data.GvAttachments.PROFILE, result.profile());
+            sync(player, result.profile());
+        }
+        player.sendSystemMessage(Component.literal(result.message()));
     }
 
     private static boolean allowJournalAction(ServerPlayer player) {
