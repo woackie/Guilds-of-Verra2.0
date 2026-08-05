@@ -31,6 +31,10 @@ public final class GvNetworking {
 
     public static void initialize() {
         PayloadTypeRegistry.clientboundPlay().register(ProfileSyncPayload.TYPE, ProfileSyncPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(
+            JournalActionResultPayload.TYPE,
+            JournalActionResultPayload.CODEC
+        );
         PayloadTypeRegistry.serverboundPlay().register(PurchaseNodePayload.TYPE, PurchaseNodePayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(PrestigePayload.TYPE, PrestigePayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(SelectTitlePayload.TYPE, SelectTitlePayload.CODEC);
@@ -64,12 +68,12 @@ public final class GvNetworking {
     }
 
     private static void purchase(ServerPlayer player, PurchaseNodePayload payload) {
-        if (!allowJournalAction(player)) {
+        if (!allowJournalAction(player, "purchase")) {
             return;
         }
         if (!validId(payload.skill(), MAX_SKILL_ID_LENGTH)
             || !validId(payload.node(), MAX_NODE_ID_LENGTH)) {
-            player.sendSystemMessage(Component.literal("Invalid journal purchase request."));
+            reject(player, "purchase", "Invalid journal purchase request.");
             return;
         }
 
@@ -80,27 +84,27 @@ public final class GvNetworking {
                 payload.node(),
                 GvContent.tree(skill)
             );
-            applyResult(player, result);
-        }, () -> player.sendSystemMessage(Component.literal("Unknown skill: " + payload.skill())));
+            applyResult(player, "purchase", result);
+        }, () -> reject(player, "purchase", "Unknown skill: " + payload.skill()));
     }
 
     private static void prestige(ServerPlayer player, PrestigePayload payload) {
-        if (!allowJournalAction(player)) {
+        if (!allowJournalAction(player, "prestige")) {
             return;
         }
         if (!validId(payload.skill(), MAX_SKILL_ID_LENGTH)) {
-            player.sendSystemMessage(Component.literal("Invalid journal prestige request."));
+            reject(player, "prestige", "Invalid journal prestige request.");
             return;
         }
 
         SkillId.parse(payload.skill()).ifPresentOrElse(skill -> {
             PurchaseResult result = ProgressionService.prestige(ProfileManager.get(player), skill, 5);
-            applyResult(player, result);
-        }, () -> player.sendSystemMessage(Component.literal("Unknown skill: " + payload.skill())));
+            applyResult(player, "prestige", result);
+        }, () -> reject(player, "prestige", "Unknown skill: " + payload.skill()));
     }
 
     private static void selectTitle(ServerPlayer player, SelectTitlePayload payload) {
-        if (!allowJournalAction(player)) {
+        if (!allowJournalAction(player, "title")) {
             return;
         }
 
@@ -108,26 +112,50 @@ public final class GvNetworking {
         if (!titleId.isEmpty()
             && (titleId.length() > MAX_TITLE_ID_LENGTH
                 || !SAFE_RESOURCE_ID.matcher(titleId).matches())) {
-            player.sendSystemMessage(Component.literal("Invalid journal title request."));
+            reject(player, "title", "Invalid journal title request.");
             return;
         }
 
         PurchaseResult result = TitleSelectionService.select(ProfileManager.get(player), titleId);
-        applyResult(player, result);
+        applyResult(player, "title", result);
     }
 
-    private static void applyResult(ServerPlayer player, PurchaseResult result) {
+    private static void applyResult(ServerPlayer player, String action, PurchaseResult result) {
         if (result.success()) {
             player.setAttached(com.guildsofverra.data.GvAttachments.PROFILE, result.profile());
             sync(player, result.profile());
         }
+        sendActionResult(player, action, result.success(), result.message());
         player.sendSystemMessage(Component.literal(result.message()));
     }
 
-    private static boolean allowJournalAction(ServerPlayer player) {
+    private static void reject(ServerPlayer player, String action, String message) {
+        sendActionResult(player, action, false, message);
+        player.sendSystemMessage(Component.literal(message));
+    }
+
+    private static void sendActionResult(
+        ServerPlayer player,
+        String action,
+        boolean success,
+        String message
+    ) {
+        if (ServerPlayNetworking.canSend(player, JournalActionResultPayload.TYPE)) {
+            ServerPlayNetworking.send(
+                player,
+                new JournalActionResultPayload(action, success, message)
+            );
+        }
+    }
+
+    private static boolean allowJournalAction(ServerPlayer player, String action) {
         long now = System.currentTimeMillis();
         Long previous = LAST_JOURNAL_ACTION.put(player.getUUID(), now);
-        return previous == null || now - previous >= JOURNAL_ACTION_COOLDOWN_MILLIS;
+        boolean allowed = previous == null || now - previous >= JOURNAL_ACTION_COOLDOWN_MILLIS;
+        if (!allowed) {
+            sendActionResult(player, action, false, "Please wait before sending another journal action.");
+        }
+        return allowed;
     }
 
     private static boolean validId(String value, int maximumLength) {
