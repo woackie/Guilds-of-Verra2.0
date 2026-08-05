@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.guildsofverra.GvVersion;
 import com.guildsofverra.content.GvContent;
 import com.guildsofverra.core.PlayerProfile;
 import com.guildsofverra.core.RequirementResult;
@@ -24,7 +25,7 @@ public final class ProfileJson {
 
     public static String toJson(PlayerProfile profile) {
         JsonObject root = new JsonObject();
-        root.addProperty("version", "0.1.0-dev.5");
+        root.addProperty("version", GvVersion.CURRENT);
         root.addProperty("payloadVersion", 3);
         root.addProperty("adventurerLevel", profile.adventurerLevel());
 
