@@ -47,6 +47,38 @@ This stacked milestone expands elite encounters without changing the frozen dev.
 - **Soulreaver Ghast** — Nether-sky artillery elite that applies Wither.
 - **End Sentinel Shulker** — End-city defender that combines ordinary levitation pressure with Weakness.
 
+## Player Hunt Event
+
+A separate configurable encounter periodically selects an eligible player and sends a hostile pack to track them down.
+
+### Runtime flow
+- A warning announces that a hostile pack has found the player's trail.
+- After a configurable delay, the pack spawns in a 40–64 block ring around the player.
+- Pack size begins at five and scales with Adventurer Level up to ten by default.
+- Every second, surviving members reacquire the selected player and refresh their path toward them.
+- The event ends when the entire pack is defeated, the timer expires, the target dies, disconnects, changes dimension, becomes ineligible, or the hunters exceed the pursuit distance.
+- Remaining event mobs are discarded during cancellation, timeout and server shutdown.
+
+### Safety and multiplayer limits
+- One active or pending hunt per player.
+- Configurable global concurrent-hunt cap.
+- Per-player cooldown prevents repeated attacks.
+- Creative and spectator players are excluded by default.
+- Spawn searches require loaded chunks, solid ground and two blocks of free space.
+- Hunt members are excluded from normal elite conversion and elite spawn budgets.
+- Overworld, Nether and End use separate mobile hostile pools.
+
+### Configuration
+The event generates `config/guildsofverra/hunt_events.json`, including:
+- trigger chance and check interval;
+- minimum Adventurer Level;
+- warning delay and player cooldown;
+- minimum/maximum pack size and level scaling;
+- spawn distance and attempts;
+- duration, pursuit distance, retarget interval and pathing speed;
+- global active-event cap;
+- dimension toggles and creative-player eligibility.
+
 ## Shared systems
 - All 25 variants remain configurable through `config/guildsofverra/elites.json`.
 - Existing nearby and regional elite budgets apply to every variant.
@@ -54,7 +86,7 @@ This stacked milestone expands elite encounters without changing the frozen dev.
 - Every variant has a persistent bestiary discovery and first-discovery reward.
 - Variant-specific equipment and effects remain server authoritative.
 - Voidstalker Endermen are explicitly restricted to the End.
-- New variants must not modify the frozen dev.5 artifact or `main`.
+- New variants and Hunt Events must not modify the frozen dev.5 artifact or `main`.
 
 ## Automated validation requirements
 - Registry contains exactly 25 unique elite IDs.
@@ -63,6 +95,7 @@ This stacked milestone expands elite encounters without changing the frozen dev.
 - Voidstalker End filtering remains enforced.
 - All ability configuration values normalize to non-negative values.
 - Existing seven elite variants remain compatible.
+- Hunt eligibility, cooldown, trigger chance and pack scaling tests pass.
 - Java 25/Fabric compilation, automated tests and artifact packaging pass.
 
 ## Runtime verification
@@ -73,6 +106,18 @@ This stacked milestone expands elite encounters without changing the frozen dev.
 3. Spawn or locate each supported base entity and confirm the expected elite name can appear.
 4. Verify the bestiary total reports 25 entries.
 5. Defeat one new variant and confirm discovery, Exploration XP and persistence.
+
+### Hunt Event checks
+1. Temporarily set `triggerChancePerCheck` to `1.0`, `checkIntervalSeconds` to `5`, `warningSeconds` to `3` and `playerCooldownMinutes` to `1`.
+2. Confirm the warning occurs before any pack member appears.
+3. Confirm mobs spawn 40–64 blocks away on safe loaded terrain.
+4. Confirm the announced member count matches the successfully spawned pack.
+5. Run away and verify the pack repeatedly reacquires and pursues the selected player.
+6. Kill the whole pack and verify the victory message fires once.
+7. Test timeout, death, disconnect and dimension-change cleanup.
+8. Test two eligible players with the global cap set to one and then two.
+9. Confirm Hunt Event mobs do not become elites or consume elite caps.
+10. Confirm disabling `hunt_events.json` removes active event mobs and stops scheduling.
 
 ### Expansion wave two checks
 - Bogged: Poison and Slowness.
@@ -91,4 +136,5 @@ This stacked milestone expands elite encounters without changing the frozen dev.
 - Ability duration and counterplay.
 - Bestiary discovery persistence and multiplayer isolation.
 - Nearby/regional spawn-budget behaviour with the 25-entry registry.
-- Tick-time performance around raids, monuments, strongholds and mob-heavy Nether areas.
+- Hunt frequency, pack size, pursuit pressure and cleanup behaviour.
+- Tick-time performance around active hunts, raids, monuments, strongholds and mob-heavy Nether areas.
