@@ -4,7 +4,9 @@ import com.guildsofverra.core.PlayerProfile;
 import com.guildsofverra.core.RequirementResult;
 import com.guildsofverra.data.ProfileManager;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiFunction;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
@@ -22,6 +24,7 @@ public final class RestrictionEvents {
     private static final long DENIAL_COOLDOWN_MILLIS = 1_500L;
     private static final int EQUIPMENT_AUDIT_INTERVAL_TICKS = 10;
     private static final Map<UUID, DenialNotice> LAST_DENIAL = new HashMap<>();
+    private static final Set<UUID> PENDING_EQUIPMENT_AUDITS = new HashSet<>();
 
     private RestrictionEvents() {}
 
@@ -44,23 +47,25 @@ public final class RestrictionEvents {
 
         ServerEntityEvents.EQUIPMENT_CHANGE.register((entity, slot, previousStack, currentStack) -> {
             if (entity instanceof ServerPlayer player
-                && slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR
-                && !currentStack.isEmpty()) {
-                enforceEquippedItem(player, slot, currentStack);
+                && slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR) {
+                PENDING_EQUIPMENT_AUDITS.add(player.getUUID());
             }
         });
 
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            if (server.getTickCount() % EQUIPMENT_AUDIT_INTERVAL_TICKS != 0) {
-                return;
-            }
+            boolean regularAudit = server.getTickCount() % EQUIPMENT_AUDIT_INTERVAL_TICKS == 0;
+            Set<UUID> onlinePlayers = new HashSet<>();
 
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                auditEquipment(player);
+                UUID playerId = player.getUUID();
+                onlinePlayers.add(playerId);
+                if (regularAudit || PENDING_EQUIPMENT_AUDITS.remove(playerId)) {
+                    auditEquipment(player);
+                }
             }
-            LAST_DENIAL.keySet().retainAll(
-                server.getPlayerList().getPlayers().stream().map(ServerPlayer::getUUID).toList()
-            );
+
+            LAST_DENIAL.keySet().retainAll(onlinePlayers);
+            PENDING_EQUIPMENT_AUDITS.retainAll(onlinePlayers);
         });
     }
 
@@ -78,23 +83,28 @@ public final class RestrictionEvents {
             if (slot.getType() != EquipmentSlot.Type.HUMANOID_ARMOR) {
                 continue;
             }
-            ItemStack equipped = player.getItemBySlot(slot);
-            if (!equipped.isEmpty()) {
-                enforceEquippedItem(player, slot, equipped);
-            }
+            enforceEquippedItem(player, slot);
         }
     }
 
-    private static void enforceEquippedItem(ServerPlayer player, EquipmentSlot slot, ItemStack stack) {
-        RequirementResult result = RestrictionService.canEquip(ProfileManager.get(player), stack);
+    private static void enforceEquippedItem(ServerPlayer player, EquipmentSlot slot) {
+        ItemStack equipped = player.getItemBySlot(slot);
+        if (equipped.isEmpty()) {
+            return;
+        }
+
+        RequirementResult result = RestrictionService.canEquip(
+            ProfileManager.get(player),
+            equipped
+        );
         if (result.allowed()) {
             return;
         }
 
-        ItemStack copy = stack.copy();
+        ItemStack removed = equipped.copy();
         player.setItemSlot(slot, ItemStack.EMPTY);
-        if (!player.getInventory().add(copy)) {
-            player.drop(copy, false);
+        if (!player.getInventory().add(removed)) {
+            player.drop(removed, false);
         }
         sendDenial(player, result.reason());
     }
