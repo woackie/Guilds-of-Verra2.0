@@ -12,6 +12,7 @@ import com.guildsofverra.elite.EliteMobService;
 import com.guildsofverra.event.HuntEventService;
 import com.guildsofverra.event.ProgressionEvents;
 import com.guildsofverra.event.WorldEventService;
+import com.guildsofverra.event.WorldEventShutdownRecovery;
 import com.guildsofverra.network.GvNetworking;
 import com.guildsofverra.restriction.RestrictionEvents;
 import com.guildsofverra.world.DimensionGateEvents;
@@ -40,6 +41,7 @@ public final class GuildsOfVerra implements ModInitializer {
         EliteAbilityEvents.initialize();
         HuntEventService.initialize();
         WorldEventService.initialize();
+        WorldEventShutdownRecovery.initialize();
         LOGGER.info("Guilds of Verra {} initialized.", GvVersion.CURRENT);
     }
 
