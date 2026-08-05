@@ -22,27 +22,38 @@ public final class JournalScreen extends Screen {
         "mining",
         "combat"
     };
+    private static final int ROW_BUTTON_COUNT = 8;
     private static final int NODE_ROWS_PER_PAGE = 8;
+    private static final int COLLECTION_ROWS_PER_PAGE = 8;
+    private static final int BESTIARY_ROWS_PER_PAGE = 5;
     private static final int MAX_PRESTIGE = 5;
     private static final long ACTION_PENDING_MILLIS = 3_000L;
     private static final long PRESTIGE_CONFIRM_MILLIS = 5_000L;
     private static final long STATUS_MESSAGE_MILLIS = 2_500L;
 
-    private final List<Button> nodeButtons = new ArrayList<>();
+    private final List<Button> rowButtons = new ArrayList<>();
+
     private View view = View.OVERVIEW;
+    private CollectionSection collectionSection = CollectionSection.TITLES;
     private String selectedSkill = "exploration";
-    private int nodePage;
-    private Button previousNodes;
-    private Button nextNodes;
-    private Button prestigeButton;
+    private int page;
+
+    private Button previousPage;
+    private Button centerAction;
+    private Button nextPage;
 
     private String pendingNodeId = "";
     private long pendingNodeUntil;
+
     private String pendingPrestigeSkill = "";
     private int pendingPrestigeFromRank;
     private long pendingPrestigeUntil;
     private String confirmPrestigeSkill = "";
     private long confirmPrestigeUntil;
+
+    private boolean pendingTitleAction;
+    private String requestedTitleId = "";
+    private long pendingTitleUntil;
 
     private long seenProfileRevision;
     private String actionStatus = "";
@@ -62,7 +73,7 @@ public final class JournalScreen extends Screen {
         int tabX = x + 16;
 
         seenProfileRevision = ClientProfileCache.revision();
-        nodeButtons.clear();
+        rowButtons.clear();
 
         tabX = addTab("Overview", tabX, tabY, 72, () -> selectView(View.OVERVIEW));
         for (String skill : SKILLS) {
@@ -72,40 +83,38 @@ public final class JournalScreen extends Screen {
         tabX = addTab("Collections", tabX, tabY, 82, () -> selectView(View.COLLECTIONS));
         addTab("Gates", tabX, tabY, 58, () -> selectView(View.GATES));
 
-        previousNodes = addRenderableWidget(
-            Button.builder(Component.literal("Previous"), button -> changeNodePage(-1))
+        previousPage = addRenderableWidget(
+            Button.builder(Component.literal("Previous"), button -> changePage(-1))
                 .bounds(x + 20, y + panelHeight - 46, 82, 20)
                 .build()
         );
-        prestigeButton = addRenderableWidget(
-            Button.builder(Component.literal("Prestige"), button -> handlePrestigeClick())
-                .bounds(x + panelWidth / 2 - 58, y + panelHeight - 46, 116, 20)
+        centerAction = addRenderableWidget(
+            Button.builder(Component.literal("Prestige"), button -> handleCenterAction())
+                .bounds(x + panelWidth / 2 - 64, y + panelHeight - 46, 128, 20)
                 .build()
         );
-        nextNodes = addRenderableWidget(
-            Button.builder(Component.literal("Next"), button -> changeNodePage(1))
+        nextPage = addRenderableWidget(
+            Button.builder(Component.literal("Next"), button -> changePage(1))
                 .bounds(x + panelWidth - 102, y + panelHeight - 46, 82, 20)
                 .build()
         );
 
-        int nodeButtonX = x + panelWidth - 126;
-        int firstNodeButtonY = y + 107;
-        for (int row = 0; row < NODE_ROWS_PER_PAGE; row++) {
+        int rowButtonX = x + panelWidth - 126;
+        int firstRowButtonY = y + 107;
+        for (int row = 0; row < ROW_BUTTON_COUNT; row++) {
             final int visibleRow = row;
-            Button nodeButton = addRenderableWidget(
+            Button rowButton = addRenderableWidget(
                 Button.builder(
                     Component.literal("Locked"),
-                    button -> purchaseNodeAt(visibleRow)
+                    button -> handleRowAction(visibleRow)
                 )
-                    .bounds(nodeButtonX, firstNodeButtonY + row * 34, 92, 20)
+                    .bounds(rowButtonX, firstRowButtonY + row * 34, 92, 20)
                     .build()
             );
-            nodeButtons.add(nodeButton);
+            rowButtons.add(rowButton);
         }
 
-        updatePagingButtons();
-        updateNodeButtons();
-        updatePrestigeButton();
+        updateControls();
     }
 
     private int addTab(String label, int x, int y, int width, Runnable action) {
@@ -119,12 +128,9 @@ public final class JournalScreen extends Screen {
 
     private void selectView(View next) {
         view = next;
-        nodePage = 0;
-        pendingNodeId = "";
+        page = 0;
         clearPrestigeConfirmation();
-        updatePagingButtons();
-        updateNodeButtons();
-        updatePrestigeButton();
+        updateControls();
     }
 
     private void selectSkill(String skill) {
@@ -132,63 +138,114 @@ public final class JournalScreen extends Screen {
         selectView(View.SKILL);
     }
 
-    private void changeNodePage(int delta) {
-        nodePage = Math.max(0, Math.min(maxNodePage(), nodePage + delta));
-        pendingNodeId = "";
+    private void changePage(int delta) {
+        page = Math.max(0, Math.min(maxPage(), page + delta));
+        clearPrestigeConfirmation();
+        updateControls();
+    }
+
+    private void handleCenterAction() {
+        if (view == View.SKILL) {
+            handlePrestigeClick();
+            return;
+        }
+        if (view == View.COLLECTIONS) {
+            collectionSection = collectionSection.next();
+            page = 0;
+            updateControls();
+        }
+    }
+
+    private void handleRowAction(int visibleRow) {
+        if (view == View.SKILL) {
+            purchaseNodeAt(visibleRow);
+        } else if (view == View.COLLECTIONS && collectionSection == CollectionSection.TITLES) {
+            selectTitleAt(visibleRow);
+        }
+    }
+
+    private void updateControls() {
         updatePagingButtons();
-        updateNodeButtons();
+        updateRowButtons();
+        updateCenterButton();
     }
 
     private void updatePagingButtons() {
-        if (previousNodes == null || nextNodes == null) {
+        if (previousPage == null || nextPage == null) {
             return;
         }
-        boolean skillView = view == View.SKILL;
-        previousNodes.visible = skillView;
-        nextNodes.visible = skillView;
-        previousNodes.active = skillView && nodePage > 0;
-        nextNodes.active = skillView && nodePage < maxNodePage();
+        boolean pagedView = view == View.SKILL || view == View.COLLECTIONS;
+        previousPage.visible = pagedView;
+        nextPage.visible = pagedView;
+        previousPage.active = pagedView && page > 0;
+        nextPage.active = pagedView && page < maxPage();
     }
 
-    private void updateNodeButtons() {
-        SkillTreeDefinition tree = selectedTree();
-        int firstNode = nodePage * NODE_ROWS_PER_PAGE;
+    private void updateRowButtons() {
         long now = System.currentTimeMillis();
 
-        for (int row = 0; row < nodeButtons.size(); row++) {
-            Button button = nodeButtons.get(row);
-            int nodeIndex = firstNode + row;
-            boolean visible = view == View.SKILL
-                && tree != null
-                && nodeIndex < tree.nodes().size();
-            button.visible = visible;
+        for (int row = 0; row < rowButtons.size(); row++) {
+            Button button = rowButtons.get(row);
+            button.visible = false;
+            button.active = false;
 
-            if (!visible) {
-                button.active = false;
+            if (view == View.SKILL) {
+                SkillTreeDefinition tree = selectedTree();
+                int nodeIndex = page * NODE_ROWS_PER_PAGE + row;
+                if (tree == null || nodeIndex >= tree.nodes().size()) {
+                    continue;
+                }
+
+                SkillNodeDefinition node = tree.nodes().get(nodeIndex);
+                String fullNodeId = selectedSkill + ":" + node.id();
+                NodeState state = nodeState(node);
+                boolean pending = fullNodeId.equals(pendingNodeId) && now < pendingNodeUntil;
+
+                button.visible = true;
+                button.setMessage(Component.literal(pending ? "Pending…" : buttonLabel(state, node)));
+                button.active = state == NodeState.PURCHASABLE
+                    && !pending
+                    && !anyActionPending();
                 continue;
             }
 
-            SkillNodeDefinition node = tree.nodes().get(nodeIndex);
-            String fullNodeId = selectedSkill + ":" + node.id();
-            NodeState state = nodeState(node);
-            boolean pending = fullNodeId.equals(pendingNodeId) && now < pendingNodeUntil;
+            if (view == View.COLLECTIONS && collectionSection == CollectionSection.TITLES) {
+                int titleIndex = page * COLLECTION_ROWS_PER_PAGE + row;
+                String titleId = titleAt(titleIndex);
+                if (titleId == null) {
+                    continue;
+                }
 
-            button.setMessage(Component.literal(pending ? "Pending…" : buttonLabel(state, node)));
-            button.active = state == NodeState.PURCHASABLE
-                && !pending
-                && pendingPrestigeSkill.isBlank();
+                boolean selected = titleId.equals(ClientProfileCache.selectedTitle());
+                boolean pending = pendingTitleAction
+                    && titleId.equals(requestedTitleId)
+                    && now < pendingTitleUntil;
+
+                button.visible = true;
+                button.setMessage(Component.literal(
+                    pending ? "Pending…" : selected ? "Active" : titleId.isBlank() ? "Clear" : "Select"
+                ));
+                button.active = !selected && !pending && !anyActionPending();
+            }
         }
     }
 
-    private void updatePrestigeButton() {
-        if (prestigeButton == null) {
+    private void updateCenterButton() {
+        if (centerAction == null) {
+            return;
+        }
+
+        if (view == View.COLLECTIONS) {
+            centerAction.visible = true;
+            centerAction.active = true;
+            centerAction.setMessage(Component.literal(collectionSection.displayName() + " →"));
             return;
         }
 
         boolean skillView = view == View.SKILL;
-        prestigeButton.visible = skillView;
+        centerAction.visible = skillView;
         if (!skillView) {
-            prestigeButton.active = false;
+            centerAction.active = false;
             return;
         }
 
@@ -199,34 +256,35 @@ public final class JournalScreen extends Screen {
         boolean confirming = selectedSkill.equals(confirmPrestigeSkill) && now < confirmPrestigeUntil;
 
         if (pending) {
-            prestigeButton.setMessage(Component.literal("Prestiging…"));
-            prestigeButton.active = false;
+            centerAction.setMessage(Component.literal("Prestiging…"));
+            centerAction.active = false;
         } else if (prestige >= MAX_PRESTIGE) {
-            prestigeButton.setMessage(Component.literal("Prestige Max"));
-            prestigeButton.active = false;
+            centerAction.setMessage(Component.literal("Prestige Max"));
+            centerAction.active = false;
         } else if (level < XpCurve.MAX_LEVEL) {
-            prestigeButton.setMessage(Component.literal("Prestige at Lv 100"));
-            prestigeButton.active = false;
+            centerAction.setMessage(Component.literal("Prestige at Lv 100"));
+            centerAction.active = false;
         } else if (confirming) {
-            prestigeButton.setMessage(Component.literal("Confirm Prestige"));
-            prestigeButton.active = pendingNodeId.isBlank();
+            centerAction.setMessage(Component.literal("Confirm Prestige"));
+            centerAction.active = !anyActionPending();
         } else {
-            prestigeButton.setMessage(Component.literal("Prestige " + (prestige + 1)));
-            prestigeButton.active = pendingNodeId.isBlank();
+            centerAction.setMessage(Component.literal("Prestige " + (prestige + 1)));
+            centerAction.active = !anyActionPending();
         }
     }
 
     private void purchaseNodeAt(int visibleRow) {
         SkillTreeDefinition tree = selectedTree();
-        int nodeIndex = nodePage * NODE_ROWS_PER_PAGE + visibleRow;
-        if (view != View.SKILL || tree == null || nodeIndex >= tree.nodes().size()) {
+        int nodeIndex = page * NODE_ROWS_PER_PAGE + visibleRow;
+        if (view != View.SKILL
+            || tree == null
+            || nodeIndex >= tree.nodes().size()
+            || anyActionPending()) {
             return;
         }
 
         SkillNodeDefinition node = tree.nodes().get(nodeIndex);
-        if (nodeState(node) != NodeState.PURCHASABLE
-            || !pendingNodeId.isBlank()
-            || !pendingPrestigeSkill.isBlank()) {
+        if (nodeState(node) != NodeState.PURCHASABLE) {
             return;
         }
 
@@ -241,16 +299,14 @@ public final class JournalScreen extends Screen {
             actionStatus = "Purchase request unavailable.";
             actionStatusUntil = System.currentTimeMillis() + STATUS_MESSAGE_MILLIS;
         }
-        updateNodeButtons();
-        updatePrestigeButton();
+        updateControls();
     }
 
     private void handlePrestigeClick() {
         if (view != View.SKILL
             || ClientProfileCache.level(selectedSkill) < XpCurve.MAX_LEVEL
             || ClientProfileCache.prestige(selectedSkill) >= MAX_PRESTIGE
-            || !pendingNodeId.isBlank()
-            || !pendingPrestigeSkill.isBlank()) {
+            || anyActionPending()) {
             return;
         }
 
@@ -261,7 +317,7 @@ public final class JournalScreen extends Screen {
             confirmPrestigeUntil = now + PRESTIGE_CONFIRM_MILLIS;
             actionStatus = "Prestige resets level and XP; nodes, points and highest level are kept.";
             actionStatusUntil = confirmPrestigeUntil;
-            updatePrestigeButton();
+            updateCenterButton();
             return;
         }
 
@@ -276,8 +332,43 @@ public final class JournalScreen extends Screen {
             actionStatus = "Prestige request unavailable.";
             actionStatusUntil = now + STATUS_MESSAGE_MILLIS;
         }
-        updateNodeButtons();
-        updatePrestigeButton();
+        updateControls();
+    }
+
+    private void selectTitleAt(int visibleRow) {
+        if (view != View.COLLECTIONS
+            || collectionSection != CollectionSection.TITLES
+            || anyActionPending()) {
+            return;
+        }
+
+        int titleIndex = page * COLLECTION_ROWS_PER_PAGE + visibleRow;
+        String titleId = titleAt(titleIndex);
+        if (titleId == null || titleId.equals(ClientProfileCache.selectedTitle())) {
+            return;
+        }
+
+        if (JournalClientActions.selectTitle(titleId)) {
+            long now = System.currentTimeMillis();
+            pendingTitleAction = true;
+            requestedTitleId = titleId;
+            pendingTitleUntil = now + ACTION_PENDING_MILLIS;
+            actionStatus = titleId.isBlank()
+                ? "Clear-title request sent."
+                : "Title request sent — " + readable(titleId);
+            actionStatusUntil = now + STATUS_MESSAGE_MILLIS;
+        } else {
+            actionStatus = "Title request unavailable.";
+            actionStatusUntil = System.currentTimeMillis() + STATUS_MESSAGE_MILLIS;
+        }
+        updateControls();
+    }
+
+    private boolean anyActionPending() {
+        long now = System.currentTimeMillis();
+        return (!pendingNodeId.isBlank() && now < pendingNodeUntil)
+            || (!pendingPrestigeSkill.isBlank() && now < pendingPrestigeUntil)
+            || (pendingTitleAction && now < pendingTitleUntil);
     }
 
     private void clearPrestigeConfirmation() {
@@ -285,12 +376,28 @@ public final class JournalScreen extends Screen {
         confirmPrestigeUntil = 0L;
     }
 
-    private int maxNodePage() {
-        if (view != View.SKILL) {
+    private int maxPage() {
+        int itemCount;
+        int rowsPerPage;
+
+        if (view == View.SKILL) {
+            SkillTreeDefinition tree = selectedTree();
+            itemCount = tree == null ? 0 : tree.nodes().size();
+            rowsPerPage = NODE_ROWS_PER_PAGE;
+        } else if (view == View.COLLECTIONS) {
+            itemCount = switch (collectionSection) {
+                case TITLES -> ClientProfileCache.titles().size() + 1;
+                case DISCOVERIES -> ClientProfileCache.discoveries().size();
+                case BESTIARY -> ClientProfileCache.discoveredElites().size();
+            };
+            rowsPerPage = collectionSection == CollectionSection.BESTIARY
+                ? BESTIARY_ROWS_PER_PAGE
+                : COLLECTION_ROWS_PER_PAGE;
+        } else {
             return 0;
         }
-        SkillTreeDefinition tree = selectedTree();
-        return tree == null ? 0 : Math.max(0, (tree.nodes().size() - 1) / NODE_ROWS_PER_PAGE);
+
+        return itemCount <= 0 ? 0 : Math.max(0, (itemCount - 1) / rowsPerPage);
     }
 
     @Override
@@ -340,11 +447,14 @@ public final class JournalScreen extends Screen {
     private void refreshActionState() {
         long now = System.currentTimeMillis();
         long revision = ClientProfileCache.revision();
+
         if (revision != seenProfileRevision) {
             boolean nodePurchased = !pendingNodeId.isBlank()
                 && ClientProfileCache.hasNode(pendingNodeId);
             boolean prestiged = !pendingPrestigeSkill.isBlank()
                 && ClientProfileCache.prestige(pendingPrestigeSkill) > pendingPrestigeFromRank;
+            boolean titleChanged = pendingTitleAction
+                && ClientProfileCache.selectedTitle().equals(requestedTitleId);
 
             if (!pendingNodeId.isBlank()) {
                 actionStatus = nodePurchased
@@ -356,34 +466,46 @@ public final class JournalScreen extends Screen {
                     ? "Prestige confirmed — " + readable(pendingPrestigeSkill)
                     : "Profile synchronized.";
                 actionStatusUntil = now + STATUS_MESSAGE_MILLIS;
+            } else if (pendingTitleAction) {
+                actionStatus = titleChanged
+                    ? requestedTitleId.isBlank()
+                        ? "Active title cleared."
+                        : "Title selected — " + readable(requestedTitleId)
+                    : "Profile synchronized.";
+                actionStatusUntil = now + STATUS_MESSAGE_MILLIS;
             }
 
             clearPendingActions();
             seenProfileRevision = revision;
-            updateNodeButtons();
-            updatePrestigeButton();
+            updateControls();
         } else {
             if (!pendingNodeId.isBlank() && now >= pendingNodeUntil) {
                 pendingNodeId = "";
                 pendingNodeUntil = 0L;
                 actionStatus = "No purchase confirmation received — check chat feedback.";
                 actionStatusUntil = now + STATUS_MESSAGE_MILLIS;
-                updateNodeButtons();
-                updatePrestigeButton();
+                updateControls();
             }
             if (!pendingPrestigeSkill.isBlank() && now >= pendingPrestigeUntil) {
                 pendingPrestigeSkill = "";
                 pendingPrestigeUntil = 0L;
                 actionStatus = "No prestige confirmation received — check chat feedback.";
                 actionStatusUntil = now + STATUS_MESSAGE_MILLIS;
-                updateNodeButtons();
-                updatePrestigeButton();
+                updateControls();
+            }
+            if (pendingTitleAction && now >= pendingTitleUntil) {
+                pendingTitleAction = false;
+                requestedTitleId = "";
+                pendingTitleUntil = 0L;
+                actionStatus = "No title confirmation received — check chat feedback.";
+                actionStatusUntil = now + STATUS_MESSAGE_MILLIS;
+                updateControls();
             }
         }
 
         if (!confirmPrestigeSkill.isBlank() && now >= confirmPrestigeUntil) {
             clearPrestigeConfirmation();
-            updatePrestigeButton();
+            updateCenterButton();
         }
         if (!actionStatus.isBlank() && now >= actionStatusUntil) {
             actionStatus = "";
@@ -396,6 +518,9 @@ public final class JournalScreen extends Screen {
         pendingPrestigeSkill = "";
         pendingPrestigeFromRank = 0;
         pendingPrestigeUntil = 0L;
+        pendingTitleAction = false;
+        requestedTitleId = "";
+        pendingTitleUntil = 0L;
     }
 
     private void drawOverview(GuiGraphicsExtractor graphics, int x, int y, int width) {
@@ -448,7 +573,7 @@ public final class JournalScreen extends Screen {
             return;
         }
 
-        int start = nodePage * NODE_ROWS_PER_PAGE;
+        int start = page * NODE_ROWS_PER_PAGE;
         int end = Math.min(tree.nodes().size(), start + NODE_ROWS_PER_PAGE);
         int rowY = y + 24;
         for (int index = start; index < end; index++) {
@@ -456,18 +581,13 @@ public final class JournalScreen extends Screen {
             rowY += 34;
         }
 
-        graphics.text(
-            font,
-            "Nodes " + (start + 1) + "–" + end + " of " + tree.nodes().size()
-                + " • page " + (nodePage + 1) + "/" + (maxNodePage() + 1),
-            x + width / 2 - 75,
+        drawPageStatus(
+            graphics,
+            x,
             y + 302,
-            0xFF9DA8A2,
-            false
+            width,
+            "Nodes " + (start + 1) + "–" + end + " of " + tree.nodes().size()
         );
-        if (!actionStatus.isBlank()) {
-            graphics.text(font, actionStatus, x, y + 302, 0xFFE4C775, false);
-        }
     }
 
     private void drawNodeRow(
@@ -558,64 +678,171 @@ public final class JournalScreen extends Screen {
 
     private void drawCollections(GuiGraphicsExtractor graphics, int x, int y, int width) {
         String selectedTitle = ClientProfileCache.selectedTitle();
-        graphics.text(font, "Collections", x, y, 0xFFE4C775, false);
+        graphics.text(font, "Collections — " + collectionSection.displayName(), x, y, 0xFFE4C775, false);
         graphics.text(
             font,
             "Discoveries " + ClientProfileCache.discoveryCount()
                 + " • Titles " + ClientProfileCache.titleCount()
-                + " • Active title: " + (selectedTitle.isBlank() ? "None" : readable(selectedTitle)),
-            x + 100,
+                + " • Active: " + (selectedTitle.isBlank() ? "None" : readable(selectedTitle))
+                + " • Bestiary " + ClientProfileCache.discoveredEliteCount()
+                + "/" + ClientProfileCache.eliteTotal(),
+            x + 150,
             y,
             0xFFC9D2CC,
             false
         );
 
-        graphics.text(
-            font,
-            "Elite bestiary " + ClientProfileCache.discoveredEliteCount()
-                + "/" + ClientProfileCache.eliteTotal(),
-            x,
-            y + 28,
-            0xFFF0F0E8,
-            false
-        );
-
-        int rowY = y + 50;
-        int shown = 0;
-        for (JsonElement element : ClientProfileCache.discoveredElites()) {
-            if (!element.isJsonObject() || shown++ >= 7) {
-                continue;
-            }
-            JsonObject elite = element.getAsJsonObject();
-            String name = elite.has("displayName") ? elite.get("displayName").getAsString() : "Unknown elite";
-            String base = elite.has("baseEntity") ? elite.get("baseEntity").getAsString() : "";
-            double health = elite.has("healthMultiplier") ? elite.get("healthMultiplier").getAsDouble() : 1.0;
-            double xp = elite.has("xpMultiplier") ? elite.get("xpMultiplier").getAsDouble() : 1.0;
-
-            graphics.fill(x, rowY, x + width, rowY + 30, 0x9A29312D);
-            graphics.text(font, name, x + 8, rowY + 5, 0xFFF0F0E8, false);
-            graphics.text(font, base, x + 180, rowY + 5, 0xFF9DA8A2, false);
-            graphics.text(
-                font,
-                "Health ×" + health + " • Combat XP ×" + xp,
-                x + width - 220,
-                rowY + 5,
-                0xFFE4C775,
-                false
-            );
-            rowY += 34;
+        switch (collectionSection) {
+            case TITLES -> drawTitles(graphics, x, y + 24, width);
+            case DISCOVERIES -> drawDiscoveries(graphics, x, y + 24, width);
+            case BESTIARY -> drawBestiary(graphics, x, y + 24, width);
         }
 
-        if (ClientProfileCache.discoveredEliteCount() == 0) {
+        drawPageStatus(graphics, x, y + 302, width, collectionSection.pageLabel());
+    }
+
+    private void drawTitles(GuiGraphicsExtractor graphics, int x, int y, int width) {
+        int start = page * COLLECTION_ROWS_PER_PAGE;
+        int total = ClientProfileCache.titles().size() + 1;
+        int end = Math.min(total, start + COLLECTION_ROWS_PER_PAGE);
+
+        for (int index = start; index < end; index++) {
+            String titleId = titleAt(index);
+            boolean selected = titleId != null && titleId.equals(ClientProfileCache.selectedTitle());
+            int rowY = y + (index - start) * 34;
+
+            graphics.fill(x, rowY, x + width, rowY + 30, selected ? 0xA02E4935 : 0x9A29312D);
             graphics.text(
                 font,
-                "Defeat an elite variant to reveal its bestiary entry.",
+                titleId == null || titleId.isBlank() ? "No active title" : readable(titleId),
+                x + 8,
+                rowY + 6,
+                0xFFF0F0E8,
+                false
+            );
+            graphics.text(
+                font,
+                selected ? "ACTIVE" : titleId != null && titleId.isBlank() ? "Clear the displayed title" : "Unlocked title",
+                x + 205,
+                rowY + 6,
+                selected ? 0xFF82C98B : 0xFFB8C5BE,
+                false
+            );
+        }
+
+        if (total == 1) {
+            graphics.text(
+                font,
+                "No titles are unlocked yet. The clear-title option remains available.",
                 x,
-                y + 58,
+                y + 42,
                 0xFF9DA8A2,
                 false
             );
         }
+    }
+
+    private void drawDiscoveries(GuiGraphicsExtractor graphics, int x, int y, int width) {
+        int start = page * COLLECTION_ROWS_PER_PAGE;
+        int total = ClientProfileCache.discoveries().size();
+        int end = Math.min(total, start + COLLECTION_ROWS_PER_PAGE);
+
+        if (total == 0) {
+            graphics.text(
+                font,
+                "No discoveries unlocked yet. Hidden entries remain secret until discovered.",
+                x,
+                y + 8,
+                0xFF9DA8A2,
+                false
+            );
+            return;
+        }
+
+        for (int index = start; index < end; index++) {
+            JsonElement element = ClientProfileCache.discoveries().get(index);
+            String discoveryId = element.isJsonPrimitive() ? element.getAsString() : "unknown";
+            int rowY = y + (index - start) * 34;
+
+            graphics.fill(x, rowY, x + width, rowY + 30, 0x9A29312D);
+            graphics.text(font, readable(discoveryId), x + 8, rowY + 6, 0xFFF0F0E8, false);
+            graphics.text(font, ellipsize(discoveryId, 54), x + 205, rowY + 6, 0xFF9DA8A2, false);
+            graphics.text(font, "DISCOVERED", x + width - 98, rowY + 6, 0xFF82C98B, false);
+        }
+    }
+
+    private void drawBestiary(GuiGraphicsExtractor graphics, int x, int y, int width) {
+        int start = page * BESTIARY_ROWS_PER_PAGE;
+        int total = ClientProfileCache.discoveredElites().size();
+        int end = Math.min(total, start + BESTIARY_ROWS_PER_PAGE);
+
+        if (total == 0) {
+            graphics.text(
+                font,
+                "Defeat an elite variant to reveal its hidden bestiary entry.",
+                x,
+                y + 8,
+                0xFF9DA8A2,
+                false
+            );
+            return;
+        }
+
+        for (int index = start; index < end; index++) {
+            JsonElement element = ClientProfileCache.discoveredElites().get(index);
+            if (!element.isJsonObject()) {
+                continue;
+            }
+            JsonObject elite = element.getAsJsonObject();
+            String name = elite.has("displayName")
+                ? elite.get("displayName").getAsString()
+                : "Unknown elite";
+            String base = elite.has("baseEntity") ? elite.get("baseEntity").getAsString() : "";
+            int rowY = y + (index - start) * 52;
+
+            graphics.fill(x, rowY, x + width, rowY + 46, 0x9A29312D);
+            graphics.text(font, name, x + 8, rowY + 6, 0xFFF0F0E8, false);
+            graphics.text(font, base, x + 190, rowY + 6, 0xFF9DA8A2, false);
+            graphics.text(
+                font,
+                "Health ×" + number(elite, "healthMultiplier")
+                    + " • Damage ×" + number(elite, "damageMultiplier")
+                    + " • XP ×" + number(elite, "xpMultiplier"),
+                x + 8,
+                rowY + 23,
+                0xFFE4C775,
+                false
+            );
+            graphics.text(
+                font,
+                "Scale ×" + number(elite, "scale")
+                    + " • Armor +" + number(elite, "armorBonus"),
+                x + width - 210,
+                rowY + 23,
+                0xFFB8C5BE,
+                false
+            );
+        }
+    }
+
+    private void drawPageStatus(
+        GuiGraphicsExtractor graphics,
+        int x,
+        int y,
+        int width,
+        String label
+    ) {
+        if (!actionStatus.isBlank()) {
+            graphics.text(font, actionStatus, x, y, 0xFFE4C775, false);
+        }
+        graphics.text(
+            font,
+            label + " • page " + (page + 1) + "/" + (maxPage() + 1),
+            x + width - 210,
+            y,
+            0xFF9DA8A2,
+            false
+        );
     }
 
     private void drawGates(GuiGraphicsExtractor graphics, int x, int y, int width) {
@@ -750,6 +977,21 @@ public final class JournalScreen extends Screen {
         return SkillId.parse(selectedSkill).map(GvContent::tree).orElse(null);
     }
 
+    private String titleAt(int index) {
+        if (index < 0) {
+            return null;
+        }
+        if (index == 0) {
+            return "";
+        }
+        int titleIndex = index - 1;
+        if (titleIndex >= ClientProfileCache.titles().size()) {
+            return null;
+        }
+        JsonElement element = ClientProfileCache.titles().get(titleIndex);
+        return element.isJsonPrimitive() ? element.getAsString() : null;
+    }
+
     private int panelWidth() {
         return Math.min(820, width - 24);
     }
@@ -767,8 +1009,12 @@ public final class JournalScreen extends Screen {
         String[] words = normalized.replace('-', '_').split("_");
         StringBuilder out = new StringBuilder();
         for (String word : words) {
-            if (word.isBlank()) continue;
-            if (!out.isEmpty()) out.append(' ');
+            if (word.isBlank()) {
+                continue;
+            }
+            if (!out.isEmpty()) {
+                out.append(' ');
+            }
             out.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1));
         }
         return out.toString();
@@ -779,6 +1025,19 @@ public final class JournalScreen extends Screen {
             return value == null ? "" : value;
         }
         return value.substring(0, Math.max(0, maximumCharacters - 1)) + "…";
+    }
+
+    private static String number(JsonObject object, String field) {
+        if (!object.has(field)) {
+            return "1";
+        }
+        double value = object.get(field).getAsDouble();
+        if (Math.rint(value) == value) {
+            return Long.toString(Math.round(value));
+        }
+        return String.format(java.util.Locale.ROOT, "%.2f", value)
+            .replaceAll("0+$", "")
+            .replaceAll("\\.$", "");
     }
 
     private void centeredText(
@@ -801,6 +1060,36 @@ public final class JournalScreen extends Screen {
         SKILL,
         COLLECTIONS,
         GATES
+    }
+
+    private enum CollectionSection {
+        TITLES("Titles", "Unlocked titles"),
+        DISCOVERIES("Discoveries", "Unlocked discoveries"),
+        BESTIARY("Bestiary", "Discovered elites");
+
+        private final String displayName;
+        private final String pageLabel;
+
+        CollectionSection(String displayName, String pageLabel) {
+            this.displayName = displayName;
+            this.pageLabel = pageLabel;
+        }
+
+        String displayName() {
+            return displayName;
+        }
+
+        String pageLabel() {
+            return pageLabel;
+        }
+
+        CollectionSection next() {
+            return switch (this) {
+                case TITLES -> DISCOVERIES;
+                case DISCOVERIES -> BESTIARY;
+                case BESTIARY -> TITLES;
+            };
+        }
     }
 
     private enum NodeState {
