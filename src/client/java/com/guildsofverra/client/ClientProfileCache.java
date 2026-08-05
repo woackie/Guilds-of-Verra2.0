@@ -8,16 +8,22 @@ import com.google.gson.JsonObject;
 public final class ClientProfileCache {
     private static final Gson GSON = new Gson();
     private static JsonObject profile = new JsonObject();
+    private static long revision;
 
     private ClientProfileCache() {}
 
     public static void update(String json) {
         JsonObject decoded = GSON.fromJson(json, JsonObject.class);
         profile = decoded == null ? new JsonObject() : decoded;
+        revision++;
     }
 
     public static JsonObject profile() {
         return profile;
+    }
+
+    public static long revision() {
+        return revision;
     }
 
     public static String version() {
