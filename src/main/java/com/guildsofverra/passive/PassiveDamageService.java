@@ -8,8 +8,8 @@ import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
 
 /** Damage multipliers resolved at the authoritative LivingEntity damage entrypoint. */
@@ -51,7 +51,7 @@ public final class PassiveDamageService {
         }
 
         Entity direct = source.getDirectEntity();
-        if (direct instanceof AbstractArrow) {
+        if (direct != null && direct.getType() == EntityTypes.ARROW) {
             return PassiveRuntimeMath.multiplyDamage(
                 amount,
                 PassiveValues.total(player, SkillId.COMBAT, "projectile_damage")

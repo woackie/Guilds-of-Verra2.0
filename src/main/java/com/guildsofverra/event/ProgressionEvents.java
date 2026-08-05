@@ -111,7 +111,7 @@ public final class ProgressionEvents {
 
         EliteVariantDefinition variant = EliteMobService.variant(variantId);
         String displayName = variant == null ? variantId : variant.displayName();
-        ProfileManager.update(player, profile -> profile.withDiscovery(discoveryId));
+        ProfileManager.update(player, current -> current.withDiscovery(discoveryId));
 
         EliteConfig config = EliteConfig.current();
         if (config.announceFirstDiscovery) {
