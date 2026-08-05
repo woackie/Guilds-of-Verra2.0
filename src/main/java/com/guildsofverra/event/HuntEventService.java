@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.BlockPos;
@@ -34,6 +35,7 @@ public final class HuntEventService {
     private static final Map<UUID, PendingHunt> PENDING = new HashMap<>();
     private static final Map<UUID, ActiveHunt> ACTIVE = new HashMap<>();
     private static final Map<UUID, Long> COOLDOWN_UNTIL = new HashMap<>();
+    private static final Set<UUID> SPAWNING_MEMBERS = new HashSet<>();
 
     private static final List<EntityType<? extends Mob>> OVERWORLD_POOL = List.of(
         EntityTypes.ZOMBIE,
@@ -58,12 +60,27 @@ public final class HuntEventService {
     private HuntEventService() {}
 
     public static void initialize() {
+        ServerEntityEvents.ENTITY_LOAD.register((entity, level) -> {
+            if (!isHuntMember(entity)) {
+                return;
+            }
+            if (SPAWNING_MEMBERS.remove(entity.getUUID())) {
+                return;
+            }
+            if (!isTrackedMember(entity.getUUID())) {
+                entity.discard();
+            }
+        });
         ServerTickEvents.END_SERVER_TICK.register(HuntEventService::tick);
         ServerLifecycleEvents.SERVER_STOPPED.register(HuntEventService::clearAll);
     }
 
     public static boolean isHuntMember(Entity entity) {
         return hasTag(entity, HUNT_MEMBER_TAG);
+    }
+
+    private static boolean isTrackedMember(UUID memberId) {
+        return ACTIVE.values().stream().anyMatch(hunt -> hunt.members().contains(memberId));
     }
 
     private static void tick(MinecraftServer server) {
@@ -229,7 +246,10 @@ public final class HuntEventService {
             EntityType<? extends Mob> type = pool.get(level.getRandom().nextInt(pool.size()));
             Mob mob = type.spawn(
                 level,
-                spawned -> spawned.addTag(HUNT_MEMBER_TAG),
+                spawned -> {
+                    spawned.addTag(HUNT_MEMBER_TAG);
+                    SPAWNING_MEMBERS.add(spawned.getUUID());
+                },
                 spawnPos,
                 EntitySpawnReason.EVENT,
                 false,
@@ -239,6 +259,7 @@ public final class HuntEventService {
                 continue;
             }
 
+            SPAWNING_MEMBERS.remove(mob.getUUID());
             mob.setPersistenceRequired();
             mob.setTarget(player);
             mob.getNavigation().moveTo(player, config.pathingSpeed);
@@ -316,6 +337,9 @@ public final class HuntEventService {
 
             hunt.members().removeIf(memberId -> {
                 Entity entity = level.getEntity(memberId);
+                if (entity == null) {
+                    return false;
+                }
                 if (!(entity instanceof Mob mob) || !mob.isAlive()) {
                     return true;
                 }
@@ -382,6 +406,7 @@ public final class HuntEventService {
         PENDING.clear();
         ACTIVE.clear();
         COOLDOWN_UNTIL.clear();
+        SPAWNING_MEMBERS.clear();
     }
 
     private static boolean hasTag(Entity entity, String tag) {
