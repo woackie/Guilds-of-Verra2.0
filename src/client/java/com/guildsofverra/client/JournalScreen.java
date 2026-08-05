@@ -7,6 +7,8 @@ import com.guildsofverra.core.SkillId;
 import com.guildsofverra.core.SkillNodeDefinition;
 import com.guildsofverra.core.SkillTreeDefinition;
 import com.guildsofverra.core.XpCurve;
+import com.guildsofverra.journal.SkillTreeLayout;
+import com.guildsofverra.journal.TreeViewport;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -41,6 +43,15 @@ public final class JournalScreen extends Screen {
     private Button previousPage;
     private Button centerAction;
     private Button nextPage;
+    private Button treeLeft;
+    private Button treeRight;
+    private Button treeUp;
+    private Button treeDown;
+    private Button treeZoomOut;
+    private Button treeZoomIn;
+
+    private SkillTreeLayout.Layout spatialLayout;
+    private TreeViewport.State treeViewport = new TreeViewport.State(1.0, 0.0, 0.0);
 
     private String pendingNodeId = "";
     private long pendingNodeUntil;
@@ -99,6 +110,38 @@ public final class JournalScreen extends Screen {
                 .build()
         );
 
+        int treeControlsY = y + panelHeight - 72;
+        treeLeft = addRenderableWidget(
+            Button.builder(Component.literal("←"), button -> panTree(80, 0))
+                .bounds(x + 24, treeControlsY, 30, 20)
+                .build()
+        );
+        treeRight = addRenderableWidget(
+            Button.builder(Component.literal("→"), button -> panTree(-80, 0))
+                .bounds(x + 58, treeControlsY, 30, 20)
+                .build()
+        );
+        treeUp = addRenderableWidget(
+            Button.builder(Component.literal("↑"), button -> panTree(0, 60))
+                .bounds(x + 92, treeControlsY, 30, 20)
+                .build()
+        );
+        treeDown = addRenderableWidget(
+            Button.builder(Component.literal("↓"), button -> panTree(0, -60))
+                .bounds(x + 126, treeControlsY, 30, 20)
+                .build()
+        );
+        treeZoomOut = addRenderableWidget(
+            Button.builder(Component.literal("−"), button -> zoomTree(-0.15))
+                .bounds(x + 166, treeControlsY, 30, 20)
+                .build()
+        );
+        treeZoomIn = addRenderableWidget(
+            Button.builder(Component.literal("+"), button -> zoomTree(0.15))
+                .bounds(x + 200, treeControlsY, 30, 20)
+                .build()
+        );
+
         int rowButtonX = x + panelWidth - 126;
         int firstRowButtonY = y + 107;
         for (int row = 0; row < ROW_BUTTON_COUNT; row++) {
@@ -114,6 +157,7 @@ public final class JournalScreen extends Screen {
             rowButtons.add(rowButton);
         }
 
+        resetTreeViewport();
         updateControls();
     }
 
@@ -135,6 +179,7 @@ public final class JournalScreen extends Screen {
 
     private void selectSkill(String skill) {
         selectedSkill = skill;
+        resetTreeViewport();
         selectView(View.SKILL);
     }
 
@@ -168,6 +213,7 @@ public final class JournalScreen extends Screen {
         updatePagingButtons();
         updateRowButtons();
         updateCenterButton();
+        updateTreeControlButtons();
     }
 
     private void updatePagingButtons() {
@@ -179,6 +225,23 @@ public final class JournalScreen extends Screen {
         nextPage.visible = pagedView;
         previousPage.active = pagedView && page > 0;
         nextPage.active = pagedView && page < maxPage();
+    }
+
+    private void updateTreeControlButtons() {
+        boolean visible = view == View.SKILL;
+        for (Button button : List.of(
+            treeLeft,
+            treeRight,
+            treeUp,
+            treeDown,
+            treeZoomOut,
+            treeZoomIn
+        )) {
+            if (button != null) {
+                button.visible = visible;
+                button.active = visible;
+            }
+        }
     }
 
     private void updateRowButtons() {
@@ -374,6 +437,61 @@ public final class JournalScreen extends Screen {
     private void clearPrestigeConfirmation() {
         confirmPrestigeSkill = "";
         confirmPrestigeUntil = 0L;
+    }
+
+    private void resetTreeViewport() {
+        SkillTreeDefinition tree = selectedTree();
+        if (tree == null) {
+            spatialLayout = null;
+            treeViewport = new TreeViewport.State(1.0, 0.0, 0.0);
+            return;
+        }
+        spatialLayout = SkillTreeLayout.build(tree);
+        treeViewport = TreeViewport.initial(
+            spatialLayout.width(),
+            spatialLayout.height(),
+            treeViewportWidth(),
+            treeViewportHeight()
+        );
+    }
+
+    private void panTree(double deltaX, double deltaY) {
+        if (view != View.SKILL || spatialLayout == null) {
+            return;
+        }
+        treeViewport = TreeViewport.pan(
+            treeViewport,
+            deltaX,
+            deltaY,
+            spatialLayout.width(),
+            spatialLayout.height(),
+            treeViewportWidth(),
+            treeViewportHeight()
+        );
+    }
+
+    private void zoomTree(double delta) {
+        if (view != View.SKILL || spatialLayout == null) {
+            return;
+        }
+        treeViewport = TreeViewport.zoomAround(
+            treeViewport,
+            delta,
+            treeViewportWidth() / 2.0,
+            treeViewportHeight() / 2.0,
+            spatialLayout.width(),
+            spatialLayout.height(),
+            treeViewportWidth(),
+            treeViewportHeight()
+        );
+    }
+
+    private int treeViewportWidth() {
+        return Math.max(220, panelWidth() - 334);
+    }
+
+    private int treeViewportHeight() {
+        return Math.max(180, panelHeight() - 176);
     }
 
     private int maxPage() {
@@ -572,25 +690,178 @@ public final class JournalScreen extends Screen {
             graphics.text(font, "Skill tree data is unavailable.", x, y + 28, 0xFFFF7777, false);
             return;
         }
+        if (spatialLayout == null) {
+            resetTreeViewport();
+        }
 
+        int mapWidth = treeViewportWidth();
+        int mapHeight = treeViewportHeight();
+        drawSpatialTree(graphics, x, y + 24, mapWidth, mapHeight, tree);
+
+        int listX = x + mapWidth + 12;
+        int listWidth = width - mapWidth - 12;
         int start = page * NODE_ROWS_PER_PAGE;
         int end = Math.min(tree.nodes().size(), start + NODE_ROWS_PER_PAGE);
         int rowY = y + 24;
         for (int index = start; index < end; index++) {
-            drawNodeRow(graphics, tree.nodes().get(index), x, rowY, width);
+            drawCompactNodeRow(graphics, tree.nodes().get(index), listX, rowY, listWidth);
             rowY += 34;
         }
 
         drawPageStatus(
             graphics,
-            x,
+            listX,
             y + 302,
-            width,
+            listWidth,
             "Nodes " + (start + 1) + "–" + end + " of " + tree.nodes().size()
         );
     }
 
-    private void drawNodeRow(
+    private void drawSpatialTree(
+        GuiGraphicsExtractor graphics,
+        int x,
+        int y,
+        int width,
+        int height,
+        SkillTreeDefinition tree
+    ) {
+        graphics.fill(x, y, x + width, y + height, 0xD0141916);
+        graphics.fill(x, y, x + width, y + 1, 0xFF54645B);
+        graphics.fill(x, y + height - 1, x + width, y + height, 0xFF54645B);
+        graphics.fill(x, y, x + 1, y + height, 0xFF54645B);
+        graphics.fill(x + width - 1, y, x + width, y + height, 0xFF54645B);
+
+        if (spatialLayout == null) {
+            return;
+        }
+
+        for (SkillTreeLayout.LayoutEdge edge : spatialLayout.edges()) {
+            SkillTreeLayout.LayoutNode from = spatialLayout.node(edge.prerequisite());
+            SkillTreeLayout.LayoutNode to = spatialLayout.node(edge.dependent());
+            if (from == null || to == null) {
+                continue;
+            }
+            int fromX = x + screenTreeX(from.x() + SkillTreeLayout.NODE_WIDTH);
+            int fromY = y + screenTreeY(from.y() + SkillTreeLayout.NODE_HEIGHT / 2);
+            int toX = x + screenTreeX(to.x());
+            int toY = y + screenTreeY(to.y() + SkillTreeLayout.NODE_HEIGHT / 2);
+            drawTreeEdge(graphics, x, y, width, height, fromX, fromY, toX, toY);
+        }
+
+        for (SkillTreeLayout.LayoutNode positioned : spatialLayout.nodes()) {
+            SkillNodeDefinition node = tree.nodesById().get(positioned.id());
+            if (node == null) {
+                continue;
+            }
+
+            int nodeX = x + screenTreeX(positioned.x());
+            int nodeY = y + screenTreeY(positioned.y());
+            int nodeWidth = Math.max(42, (int) Math.round(SkillTreeLayout.NODE_WIDTH * treeViewport.zoom()));
+            int nodeHeight = Math.max(18, (int) Math.round(SkillTreeLayout.NODE_HEIGHT * treeViewport.zoom()));
+            if (nodeX < x
+                || nodeY < y
+                || nodeX + nodeWidth > x + width
+                || nodeY + nodeHeight > y + height) {
+                continue;
+            }
+
+            NodeState state = nodeState(node);
+            int background = switch (state) {
+                case PURCHASED -> 0xE02E4935;
+                case PURCHASABLE -> 0xE05A4D27;
+                case LEVEL_LOCKED -> 0xE02A302D;
+                case PREREQUISITE_LOCKED, POINTS_LOCKED -> 0xE03B3025;
+            };
+            graphics.fill(nodeX, nodeY, nodeX + nodeWidth, nodeY + nodeHeight, background);
+            graphics.fill(nodeX, nodeY, nodeX + nodeWidth, nodeY + 1, stateColor(state));
+
+            if (treeViewport.zoom() >= 0.70) {
+                graphics.text(
+                    font,
+                    ellipsize(readable(node.id()), treeViewport.zoom() >= 1.0 ? 18 : 11),
+                    nodeX + 5,
+                    nodeY + 5,
+                    0xFFF0F0E8,
+                    false
+                );
+                graphics.text(
+                    font,
+                    "Lv " + node.minLevel(),
+                    nodeX + 5,
+                    nodeY + nodeHeight - 11,
+                    stateColor(state),
+                    false
+                );
+            }
+        }
+
+        graphics.text(
+            font,
+            "Tree map • " + Math.round(treeViewport.zoom() * 100) + "% • arrows pan • −/+ zoom",
+            x + 6,
+            y + height - 13,
+            0xFF9DA8A2,
+            false
+        );
+    }
+
+    private void drawTreeEdge(
+        GuiGraphicsExtractor graphics,
+        int viewportX,
+        int viewportY,
+        int viewportWidth,
+        int viewportHeight,
+        int fromX,
+        int fromY,
+        int toX,
+        int toY
+    ) {
+        int minimumX = viewportX;
+        int maximumX = viewportX + viewportWidth;
+        int minimumY = viewportY;
+        int maximumY = viewportY + viewportHeight;
+        if ((fromX < minimumX && toX < minimumX)
+            || (fromX > maximumX && toX > maximumX)
+            || (fromY < minimumY && toY < minimumY)
+            || (fromY > maximumY && toY > maximumY)) {
+            return;
+        }
+
+        int middleX = (fromX + toX) / 2;
+        fillClipped(graphics, minimumX, minimumY, maximumX, maximumY, fromX, fromY, middleX, fromY + 1);
+        fillClipped(graphics, minimumX, minimumY, maximumX, maximumY, middleX, Math.min(fromY, toY), middleX + 1, Math.max(fromY, toY) + 1);
+        fillClipped(graphics, minimumX, minimumY, maximumX, maximumY, middleX, toY, toX, toY + 1);
+    }
+
+    private static void fillClipped(
+        GuiGraphicsExtractor graphics,
+        int minimumX,
+        int minimumY,
+        int maximumX,
+        int maximumY,
+        int x1,
+        int y1,
+        int x2,
+        int y2
+    ) {
+        int left = Math.max(minimumX, Math.min(x1, x2));
+        int right = Math.min(maximumX, Math.max(x1, x2));
+        int top = Math.max(minimumY, Math.min(y1, y2));
+        int bottom = Math.min(maximumY, Math.max(y1, y2));
+        if (left < right && top < bottom) {
+            graphics.fill(left, top, right, bottom, 0xFF63746A);
+        }
+    }
+
+    private int screenTreeX(double worldX) {
+        return (int) Math.round(TreeViewport.screenX(treeViewport, worldX));
+    }
+
+    private int screenTreeY(double worldY) {
+        return (int) Math.round(TreeViewport.screenY(treeViewport, worldY));
+    }
+
+    private void drawCompactNodeRow(
         GuiGraphicsExtractor graphics,
         SkillNodeDefinition node,
         int x,
@@ -601,31 +872,8 @@ public final class JournalScreen extends Screen {
         boolean purchased = state == NodeState.PURCHASED;
 
         graphics.fill(x, y, x + width, y + 30, purchased ? 0xA02E4935 : 0x9A29312D);
-        graphics.text(font, readable(node.id()), x + 8, y + 5, 0xFFF0F0E8, false);
-        graphics.text(
-            font,
-            ellipsize(node.effect(), 48),
-            x + 180,
-            y + 5,
-            0xFFB8C5BE,
-            false
-        );
-        graphics.text(
-            font,
-            stateLabel(state, node),
-            x + width - 265,
-            y + 17,
-            stateColor(state),
-            false
-        );
-        graphics.text(
-            font,
-            "Cost " + node.cost() + " • " + node.category(),
-            x + 8,
-            y + 17,
-            0xFF9DA8A2,
-            false
-        );
+        graphics.text(font, ellipsize(readable(node.id()), 20), x + 8, y + 5, 0xFFF0F0E8, false);
+        graphics.text(font, stateLabel(state, node), x + 8, y + 17, stateColor(state), false);
     }
 
     private NodeState nodeState(SkillNodeDefinition node) {
