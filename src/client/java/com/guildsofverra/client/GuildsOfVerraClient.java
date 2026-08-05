@@ -39,6 +39,7 @@ public final class GuildsOfVerraClient implements ClientModInitializer {
                 )
             )
         );
+        JournalFeedbackOverlay.initialize();
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (openJournal.consumeClick()) {
