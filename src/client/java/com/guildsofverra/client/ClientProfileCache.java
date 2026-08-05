@@ -59,6 +59,14 @@ public final class ClientProfileCache {
         return integer(skill, "spentPoints");
     }
 
+    public static JsonObject passiveBonuses(String skill) {
+        if (!profile.has("passiveBonuses")) {
+            return new JsonObject();
+        }
+        JsonObject bonuses = profile.getAsJsonObject("passiveBonuses");
+        return bonuses.has(skill) ? bonuses.getAsJsonObject(skill) : new JsonObject();
+    }
+
     public static int purchasedNodeCount() {
         return profile.has("purchasedNodeCount") ? profile.get("purchasedNodeCount").getAsInt() : 0;
     }
@@ -109,6 +117,22 @@ public final class ClientProfileCache {
         }
         JsonObject gates = profile.getAsJsonObject("dimensionGates");
         return gates.has(id) ? gates.getAsJsonObject(id) : new JsonObject();
+    }
+
+    public static JsonArray equipmentGates() {
+        return array("equipmentGates");
+    }
+
+    public static int equipmentGateCount() {
+        return profile.has("equipmentGateCount")
+            ? profile.get("equipmentGateCount").getAsInt()
+            : equipmentGates().size();
+    }
+
+    public static int unlockedEquipmentGateCount() {
+        return profile.has("unlockedEquipmentGateCount")
+            ? profile.get("unlockedEquipmentGateCount").getAsInt()
+            : 0;
     }
 
     public static int eliteTotal() {
