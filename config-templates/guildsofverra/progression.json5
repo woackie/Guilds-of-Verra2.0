@@ -1,5 +1,46 @@
 {
-  "nether": { "adventurer": 25, "exploration": 25, "mining": 20, "combat": 15 },
-  "end": { "adventurer": 50, "exploration": 45, "mining": 40, "combat": 40 },
-  "prestige": { "enabled": true, "max_rank": 5, "keep_nodes": true }
+  // Travel and combat progression.
+  "explorationCellSize": 128,
+  "explorationCellXp": 125,
+  "combatDamageXpMultiplier": 3.0,
+  "combatKillHealthXpMultiplier": 2.0,
+
+  // Fishing rewards are classified from vanilla catch and pickup statistics.
+  "fishingFishXp": 35,
+  "fishingTreasureXp": 100,
+  "fishingJunkXp": 12,
+  "fishingFallbackXp": 25,
+  "fishingClassificationGraceSeconds": 3,
+
+  "showActivityXpMessages": true,
+  "showLevelUpMessages": true,
+  "minimumActivityXpMessage": 1,
+
+  "miningXp": {
+    "minecraft:stone": 1,
+    "minecraft:deepslate": 1,
+    "minecraft:coal_ore": 8,
+    "minecraft:iron_ore": 25,
+    "minecraft:diamond_ore": 120,
+    "minecraft:ancient_debris": 300
+  },
+
+  "cookingXp": {
+    "minecraft:cooked_cod": 18,
+    "minecraft:cooked_salmon": 22,
+    "minecraft:cooked_chicken": 22,
+    "minecraft:cooked_porkchop": 28,
+    "minecraft:cooked_beef": 30,
+    "minecraft:cooked_mutton": 26,
+    "minecraft:cooked_rabbit": 28,
+    "minecraft:baked_potato": 16,
+    "minecraft:dried_kelp": 8,
+    "minecraft:bread": 18,
+    "minecraft:cookie": 10,
+    "minecraft:pumpkin_pie": 35,
+    "minecraft:cake": 75,
+    "minecraft:mushroom_stew": 30,
+    "minecraft:rabbit_stew": 55,
+    "minecraft:beetroot_soup": 30
+  }
 }
