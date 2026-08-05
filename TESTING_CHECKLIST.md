@@ -1,62 +1,130 @@
-# 0.1.0-dev.4 in-game testing checklist
+# 0.1.0-dev.5 in-game testing checklist
 
-## Startup and profile compatibility
+Use a copied test world. Keep only one Guilds of Verra JAR in the `mods` folder.
 
-1. Back up the test world, replace dev.3 with only `guilds-of-verra-0.1.0-dev.4.jar` and launch Minecraft 26.2.
-2. Join an existing dev.3 world and confirm all levels, XP, prestige, nodes, discoveries and titles remain intact.
-3. Confirm both `config/guildsofverra/progression.json` and `config/guildsofverra/elites.json` exist.
-4. Run `/gv profile`, open the journal with `J`, leave and rejoin, and confirm synchronized values remain correct.
+## Phase 1 — Ten-minute smoke test
 
-## Equipment and Elytra hard locks
+1. Replace the old test JAR with only `guilds-of-verra-0.1.0-dev.5.jar` and launch Minecraft 26.2.
+2. Confirm the log reports `Guilds of Verra 0.1.0-dev.5 initialized.`
+3. Join an existing dev.3 world and confirm levels, XP, prestige, nodes, discoveries and titles remain intact.
+4. Press `J`; confirm the journal opens without a crash.
+5. Open Overview, every skill, Collections, Gates and Unlocks.
+6. Confirm all five skill maps appear and the Previous/Next, pan and zoom controls respond.
+7. Purchase one valid cheap node and confirm points and node state update immediately.
+8. Attempt one locked node and confirm the denial appears without changing the profile.
+9. Leave and rejoin; confirm the purchased node remains.
+10. Mine one block, damage one hostile mob, catch one fish or collect one cooked food and confirm progression still updates.
 
-5. Test locked iron, diamond and netherite tools while breaking blocks.
-6. Test locked swords and axes against mobs.
-7. Test bows, crossbows and shields through normal use and held-use actions.
-8. Equip locked iron, diamond and netherite armour through inventory clicks and shift-clicking.
-9. Inject locked armour with commands or a dispenser and confirm the recurring audit removes it safely.
-10. Fill the inventory, inject locked armour and confirm the removed item drops instead of disappearing.
-11. Equip a locked Elytra, attempt take-off and confirm it is removed and flight stops.
-12. Purchase the required nodes and confirm every previously locked item works immediately.
-13. Confirm repeated blocked actions show readable requirements without flooding chat.
+Stop here and report immediately if startup, profile loading, journal opening or saving fails.
 
-## Dimension gates and safe returns
+## Phase 2 — Journal layout and navigation
 
-14. Enter a Nether portal below its requirements and confirm every missing requirement is listed.
-15. Confirm the player returns roughly one second before the portal rather than inside it.
-16. Repeat beside walls, pits, water and lava; confirm the return remains survivable.
-17. Stand in an overlapping or rapid-reentry portal and confirm no transfer loop occurs.
-18. Attempt Nether entry using commands or another transfer method and confirm the gate still applies.
-19. Repeat the same checks for the End gate.
-20. Meet all requirements and confirm legitimate Nether and End travel is unaffected.
-21. Test two players using nearby portals with different progression and confirm return positions never cross.
+11. Test the journal with small, normal and large GUI scale settings.
+12. Test at a standard 16:9 resolution.
+13. Test an ultrawide or resized window if available.
+14. Confirm no tab, footer, page button or row action is outside the screen.
+15. Confirm every skill map shows node boxes and prerequisite paths.
+16. Pan left, right, up and down and confirm movement stops at sensible bounds.
+17. Zoom repeatedly from the minimum to maximum and confirm nodes remain stable.
+18. Switch between skills after panning/zooming and confirm each new tree starts in a usable position.
+19. Confirm the paged node list remains readable beside the map.
+20. Confirm purchased, purchasable, level-locked, prerequisite-locked and point-locked states are distinguishable without relying only on colour.
 
-## Elite spawning and budgets
+## Phase 3 — Node purchasing and action feedback
 
-22. Reach Adventurer Level 10 or temporarily lower `minimumAdventurerLevel` in `elites.json`.
-23. Increase `baseSpawnChance` for testing, restart, and confirm supported hostile mobs can become elites.
-24. Confirm names, scale, health, speed, armour, knockback resistance and damage differ by role.
-25. Verify Tank Zombies, Bulwark Drowned, Armoured Skeletons and Marksmen receive their visible equipment.
-26. Spawn many hostile mobs and confirm nearby and regional elite caps are respected.
-27. Re-enter chunks containing elites and confirm they do not convert repeatedly or multiply their attributes.
-28. Test at several Adventurer Levels and confirm stat scaling increases but stays below its configured cap.
+21. Purchase a node with sufficient level, points and prerequisites.
+22. Confirm the button enters a pending state and then becomes owned.
+23. Confirm available and spent points update immediately.
+24. Attempt to buy the same node again and confirm it is rejected.
+25. Attempt a node below the required level.
+26. Attempt a node with a missing prerequisite.
+27. Attempt a node without enough points.
+28. Click purchase repeatedly and confirm duplicate requests are rate-limited.
+29. Confirm success, denial and rate-limit messages appear clearly in chat; journal-inline feedback is prepared through the new result payload and should be checked once fully wired.
+30. Disconnect during a pending action, reconnect and confirm the authoritative server profile is correct.
+31. Open two clients and purchase different nodes simultaneously; confirm profiles never cross.
 
-## Elite abilities, rewards and collections
+## Phase 4 — Prestige
 
-29. Let a Venom Spider hit a target and confirm poison duration follows configuration.
-30. Let a Marksman Skeleton hit a target and confirm slowness.
-31. Let a Bulwark Drowned hit a target and confirm weakness.
-32. Take damage from a Volatile Creeper and confirm the target is ignited.
-33. Disable `specialAbilitiesEnabled`, restart, and confirm those effects stop.
-34. Defeat each elite and confirm Combat XP reflects its configured reward scale.
-35. Defeat a variant for the first time and confirm a bestiary discovery and Exploration XP are awarded.
-36. Defeat the same variant again and confirm discovery XP is not awarded twice.
-37. Reconnect and confirm discoveries persist and remain synchronized.
-38. Test two players defeating the same elite variant and confirm each profile unlocks independently.
+32. Use `/gv` administration on a copied profile to reach level 100 in one skill if needed.
+33. Confirm the prestige button is disabled below level 100.
+34. At level 100, click Prestige once and confirm the consequence warning appears.
+35. Let the confirmation window expire and confirm no prestige occurs.
+36. Confirm prestige on the second click within the window.
+37. Verify level and current XP reset as designed.
+38. Verify purchased nodes, permanent earned points and highest-ever level remain.
+39. Confirm the prestige rank updates immediately and persists after reconnecting.
+40. Verify maximum prestige cannot be exceeded.
 
-## Regression and stability
+## Phase 5 — Collections and titles
 
-39. Recheck Mining, Combat, Exploration, Fishing and Cooking XP from dev.3.
-40. Recheck ore XP, extra fish and extra cooked-output passives.
-41. Play a normal survival session and watch for repeated log errors, unexpected item loss or portal bouncing.
-42. Test several players around many hostile mobs and inspect server tick time for elite-query regressions.
-43. Restore ordinary spawn-chance and cap settings before keeping the world.
+41. Cycle through Titles, Discoveries and Bestiary.
+42. Confirm each section uses its own correct page count.
+43. Select an unlocked title and confirm it becomes active.
+44. Select the clear-title entry and confirm the active title becomes empty.
+45. Attempt rapid title changes and confirm requests are rate-limited.
+46. Confirm unlocked discoveries are listed and internal IDs remain understandable.
+47. Confirm undiscovered elite details are not exposed.
+48. Defeat a new elite and confirm its bestiary entry appears after synchronization.
+49. Reconnect and confirm title and bestiary state persist.
+50. Test two players with different discoveries and confirm each sees only their own collection.
+
+## Phase 6 — Passives, Unlocks and travel gates
+
+51. Compare active-passive summaries before and after purchasing a passive node.
+52. Confirm passive totals change immediately after purchase.
+53. Open Unlocks and confirm all sixteen entries can be paged through.
+54. Confirm iron, diamond and netherite tools show the correct Mining nodes.
+55. Confirm swords, axes, bows, crossbows and shields show the correct Combat nodes.
+56. Confirm iron, diamond and netherite armour show the correct Combat nodes.
+57. Confirm Elytra shows `exploration:elytra_certification`.
+58. Confirm each card shows required skill level, current level, node, effect and locked/unlocked state.
+59. Purchase a required node and confirm its Unlocks card updates immediately.
+60. Open Gates and compare Nether/End requirements with `/gv profile` and actual portal behavior.
+
+## Phase 7 — Dev.4 regression: equipment and Elytra
+
+61. Test locked iron, diamond and netherite tools while breaking blocks.
+62. Test locked swords and axes against mobs.
+63. Test bows, crossbows and shields through normal use.
+64. Equip locked armour normally, through shift-clicking and through commands.
+65. Fill the inventory and confirm removed locked armour drops instead of disappearing.
+66. Equip a locked Elytra and attempt take-off; confirm equipment removal and flight cancellation.
+67. Purchase the relevant node and confirm the item becomes usable immediately.
+68. Confirm repeated blocked actions do not flood chat.
+
+## Phase 8 — Dev.4 regression: dimensions and elites
+
+69. Enter a Nether portal below requirements and confirm all missing requirements are listed.
+70. Confirm the return is before the portal and does not loop.
+71. Repeat near walls, drops, water and lava.
+72. Repeat the same checks for the End.
+73. Test two players using nearby portals with different progression.
+74. Increase elite spawn chance temporarily and confirm all seven elite roles can appear.
+75. Confirm names, equipment, scale, stats and nearby/regional caps.
+76. Confirm Venom poison, Marksman slowness, Bulwark weakness and Volatile fire.
+77. Confirm Combat XP scaling and one-time Exploration discovery XP.
+78. Defeat the same elite twice and confirm discovery XP is not repeated.
+79. Restore ordinary elite configuration values before keeping the world.
+
+## Phase 9 — Progression and stability regression
+
+80. Recheck Mining, Combat, Exploration, Fishing and Cooking XP.
+81. Recheck ore-XP, extra-fish and extra-cooked-output passives.
+82. Edit several progression and elite configuration values, restart and confirm they load.
+83. Test several players around hostile mobs while journals are open.
+84. Watch the latest log for repeated exceptions, packet errors or rendering errors.
+85. Play a normal survival session and note unexpected item loss, portal bouncing, duplicate XP or tick-time spikes.
+86. Reconnect all players and confirm every profile remains isolated and persistent.
+
+## Report format
+
+For every problem, record:
+
+- checklist step number;
+- what you expected;
+- what happened;
+- whether it happens every time;
+- single-player or multiplayer;
+- relevant screenshot;
+- latest log or crash report when available.
