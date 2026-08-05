@@ -1,8 +1,13 @@
 package com.guildsofverra.event;
 
 import com.guildsofverra.api.GuildsOfVerraApi;
+import com.guildsofverra.config.ProgressionConfig;
+import com.guildsofverra.content.GvContent;
+import com.guildsofverra.core.PassiveBonusService;
+import com.guildsofverra.core.PlayerProfile;
 import com.guildsofverra.core.ProgressionChange;
 import com.guildsofverra.core.SkillId;
+import com.guildsofverra.data.ProfileManager;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -14,81 +19,99 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
 public final class ProgressionEvents {
-    private static final Map<String, Integer> MINING_XP = defaultMiningXp();
     private static final Map<UUID, Long> LAST_EXPLORATION_CELL = new HashMap<>();
 
     private ProgressionEvents() {}
 
     public static void initialize() {
         PlayerBlockBreakEvents.AFTER.register((level, player, pos, state, blockEntity) -> {
-            if (player instanceof ServerPlayer serverPlayer) {
-                String id = BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();
-                int xp = MINING_XP.getOrDefault(id, 0);
-                if (xp > 0) {
-                    notifyChange(serverPlayer, GuildsOfVerraApi.awardXp(serverPlayer, SkillId.MINING, xp));
-                }
+            if (!(player instanceof ServerPlayer serverPlayer)) return;
+            ProgressionConfig config = ProgressionConfig.current();
+            String id = BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();
+            long xp = config.miningXp(id);
+            if (xp <= 0) return;
+
+            if (isOre(id)) {
+                PlayerProfile profile = ProfileManager.get(serverPlayer);
+                double oreBonus = PassiveBonusService.total(
+                    profile,
+                    SkillId.MINING,
+                    GvContent.tree(SkillId.MINING),
+                    "ore_xp"
+                );
+                xp = PassiveBonusService.applyPositiveMultiplier(xp, oreBonus);
             }
+            awardAndNotify(serverPlayer, SkillId.MINING, xp, "Mined " + id, false);
         });
 
         ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, baseDamageTaken, damageTaken, blocked) -> {
-            if (damageTaken > 0 && source.getEntity() instanceof ServerPlayer player && entity != player) {
-                long xp = Math.max(1L, Math.round(damageTaken * 3.0));
-                notifyChange(player, GuildsOfVerraApi.awardXp(player, SkillId.COMBAT, xp));
-            }
+            if (damageTaken <= 0 || !(source.getEntity() instanceof ServerPlayer player) || entity == player) return;
+            long xp = Math.max(1L, Math.round(
+                damageTaken * ProgressionConfig.current().combatDamageXpMultiplier
+            ));
+            awardAndNotify(player, SkillId.COMBAT, xp, "Combat damage", false);
         });
 
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
-            if (source.getEntity() instanceof ServerPlayer player && entity != player) {
-                long bonus = Math.max(1L, Math.round(entity.getMaxHealth() * 2.0));
-                notifyChange(player, GuildsOfVerraApi.awardXp(player, SkillId.COMBAT, bonus));
-            }
+            if (!(source.getEntity() instanceof ServerPlayer player) || entity == player) return;
+            long bonus = Math.max(1L, Math.round(
+                entity.getMaxHealth() * ProgressionConfig.current().combatKillHealthXpMultiplier
+            ));
+            awardAndNotify(player, SkillId.COMBAT, bonus, "Enemy defeated", false);
         });
 
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            if (server.getTickCount() % 20 != 0) {
-                return;
-            }
+            if (server.getTickCount() % 20 != 0) return;
+            ProgressionConfig config = ProgressionConfig.current();
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                long cellX = Math.floorDiv(player.getBlockX(), 128);
-                long cellZ = Math.floorDiv(player.getBlockZ(), 128);
+                long cellX = Math.floorDiv(player.getBlockX(), config.explorationCellSize);
+                long cellZ = Math.floorDiv(player.getBlockZ(), config.explorationCellSize);
                 long key = (cellX & 0xffffffffL) << 32 | (cellZ & 0xffffffffL);
                 Long previous = LAST_EXPLORATION_CELL.put(player.getUUID(), key);
-                if (previous != null && previous.longValue() != key) {
-                    notifyChange(player, GuildsOfVerraApi.awardXp(player, SkillId.EXPLORATION, 125));
+                if (previous != null && previous.longValue() != key && config.explorationCellXp > 0) {
+                    awardAndNotify(
+                        player,
+                        SkillId.EXPLORATION,
+                        config.explorationCellXp,
+                        "New exploration area",
+                        false
+                    );
                 }
             }
+            StatProgressionTracker.tick(server.getPlayerList().getPlayers());
         });
     }
 
-    private static void notifyChange(ServerPlayer player, ProgressionChange change) {
-        if (change.leveledUp()) {
+    static ProgressionChange awardAndNotify(
+        ServerPlayer player,
+        SkillId skill,
+        long xp,
+        String detail,
+        boolean activityMessage
+    ) {
+        ProgressionChange change = GuildsOfVerraApi.awardXp(player, skill, xp);
+        ProgressionConfig config = ProgressionConfig.current();
+        if (activityMessage
+            && config.showActivityXpMessages
+            && change.awardedXp() >= config.minimumActivityXpMessage) {
             player.sendSystemMessage(Component.literal(
-                change.skill().serializedName() + " reached level " + change.newLevel() + "!"
+                "+" + change.awardedXp() + " " + displayName(skill) + " XP — " + detail
             ));
         }
+        if (change.leveledUp() && config.showLevelUpMessages) {
+            player.sendSystemMessage(Component.literal(
+                displayName(change.skill()) + " reached level " + change.newLevel() + "!"
+            ));
+        }
+        return change;
     }
 
-    private static Map<String, Integer> defaultMiningXp() {
-        Map<String, Integer> map = new HashMap<>();
-        map.put("minecraft:stone", 1);
-        map.put("minecraft:deepslate", 1);
-        map.put("minecraft:coal_ore", 8);
-        map.put("minecraft:deepslate_coal_ore", 8);
-        map.put("minecraft:copper_ore", 10);
-        map.put("minecraft:deepslate_copper_ore", 10);
-        map.put("minecraft:iron_ore", 25);
-        map.put("minecraft:deepslate_iron_ore", 25);
-        map.put("minecraft:gold_ore", 35);
-        map.put("minecraft:deepslate_gold_ore", 35);
-        map.put("minecraft:redstone_ore", 18);
-        map.put("minecraft:deepslate_redstone_ore", 18);
-        map.put("minecraft:lapis_ore", 18);
-        map.put("minecraft:deepslate_lapis_ore", 18);
-        map.put("minecraft:diamond_ore", 120);
-        map.put("minecraft:deepslate_diamond_ore", 120);
-        map.put("minecraft:emerald_ore", 150);
-        map.put("minecraft:deepslate_emerald_ore", 150);
-        map.put("minecraft:ancient_debris", 300);
-        return Map.copyOf(map);
+    private static boolean isOre(String blockId) {
+        return blockId.endsWith("_ore") || blockId.contains("deepslate_") || blockId.equals("minecraft:ancient_debris");
+    }
+
+    private static String displayName(SkillId skill) {
+        String raw = skill.serializedName();
+        return Character.toUpperCase(raw.charAt(0)) + raw.substring(1);
     }
 }
