@@ -8,6 +8,7 @@ import com.guildsofverra.core.PlayerProfile;
 import com.guildsofverra.core.ProgressionService;
 import com.guildsofverra.core.PurchaseResult;
 import com.guildsofverra.core.SkillId;
+import com.guildsofverra.core.SkillProgress;
 import com.guildsofverra.data.GvAttachments;
 import com.guildsofverra.data.ProfileManager;
 import com.guildsofverra.elite.EliteMobService;
@@ -93,6 +94,16 @@ public final class GvCommands {
                         );
                         return 1;
                     })))
+                .then(Commands.literal("test").requires(Commands.hasPermission(Commands.LEVEL_ADMINS))
+                    .then(Commands.literal("master-skill")
+                        .then(Commands.argument("player", EntityArgument.player())
+                        .then(Commands.argument("skill", StringArgumentType.word())
+                            .suggests((ctx, builder) -> suggestSkills(builder))
+                            .executes(ctx -> masterSkill(
+                                ctx.getSource(),
+                                EntityArgument.getPlayer(ctx, "player"),
+                                StringArgumentType.getString(ctx, "skill")
+                            ))))))
                 .then(Commands.literal("event").requires(Commands.hasPermission(Commands.LEVEL_ADMINS))
                     .executes(ctx -> worldEventStatus(ctx.getSource()))
                     .then(Commands.literal("start")
@@ -296,6 +307,16 @@ public final class GvCommands {
         return builder.buildFuture();
     }
 
+    private static CompletableFuture<Suggestions> suggestSkills(SuggestionsBuilder builder) {
+        String remaining = builder.getRemaining().toLowerCase(Locale.ROOT);
+        for (SkillId skill : SkillId.values()) {
+            if (skill.serializedName().startsWith(remaining)) {
+                builder.suggest(skill.serializedName());
+            }
+        }
+        return builder.buildFuture();
+    }
+
     private static CompletableFuture<Suggestions> suggestEliteVariants(
         SuggestionsBuilder builder
     ) {
@@ -306,6 +327,62 @@ public final class GvCommands {
             }
         }
         return builder.buildFuture();
+    }
+
+    private static int masterSkill(
+        CommandSourceStack source,
+        ServerPlayer player,
+        String skillName
+    ) {
+        SkillId skill = SkillId.parse(skillName).orElse(null);
+        if (skill == null) {
+            source.sendFailure(Component.literal("Unknown skill: " + skillName));
+            return 0;
+        }
+
+        PlayerProfile profile = ProfileManager.get(player);
+        SkillProgress current = profile.skill(skill);
+        profile = profile.withSkill(skill, new SkillProgress(
+            100,
+            0L,
+            100,
+            current.prestige(),
+            100
+        ));
+
+        boolean changed;
+        do {
+            changed = false;
+            for (var node : GvContent.tree(skill).nodes()) {
+                String fullId = skill.serializedName() + ":" + node.id();
+                if (profile.purchasedNodes().contains(fullId)) continue;
+                PurchaseResult result = ProgressionService.purchaseNode(
+                    profile,
+                    skill,
+                    node.id(),
+                    GvContent.tree(skill)
+                );
+                if (result.success()) {
+                    profile = result.profile();
+                    changed = true;
+                }
+            }
+        } while (changed);
+
+        player.setAttached(GvAttachments.PROFILE, profile);
+        GvNetworking.sync(player, profile);
+        int purchased = profile.purchasedNodes().stream()
+            .mapToInt(id -> id.startsWith(skill.serializedName() + ":") ? 1 : 0)
+            .sum();
+        int result = purchased;
+        source.sendSuccess(
+            () -> Component.literal(
+                "Mastered " + skill.serializedName() + " for "
+                    + player.getName().getString() + " (" + result + " nodes)."
+            ),
+            true
+        );
+        return Math.max(1, purchased);
     }
 
     private static int show(ServerPlayer player) {

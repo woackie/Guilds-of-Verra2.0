@@ -47,6 +47,24 @@ public final class StatProgressionTracker {
         Items.RABBIT_STEW,
         Items.BEETROOT_SOUP
     );
+    private static final Map<Item, Item> PRESERVED_INGREDIENTS = Map.ofEntries(
+        Map.entry(Items.COOKED_COD, Items.COD),
+        Map.entry(Items.COOKED_SALMON, Items.SALMON),
+        Map.entry(Items.COOKED_CHICKEN, Items.CHICKEN),
+        Map.entry(Items.COOKED_PORKCHOP, Items.PORKCHOP),
+        Map.entry(Items.COOKED_BEEF, Items.BEEF),
+        Map.entry(Items.COOKED_MUTTON, Items.MUTTON),
+        Map.entry(Items.COOKED_RABBIT, Items.RABBIT),
+        Map.entry(Items.BAKED_POTATO, Items.POTATO),
+        Map.entry(Items.DRIED_KELP, Items.KELP),
+        Map.entry(Items.BREAD, Items.WHEAT),
+        Map.entry(Items.COOKIE, Items.WHEAT),
+        Map.entry(Items.PUMPKIN_PIE, Items.PUMPKIN),
+        Map.entry(Items.CAKE, Items.WHEAT),
+        Map.entry(Items.MUSHROOM_STEW, Items.BROWN_MUSHROOM),
+        Map.entry(Items.RABBIT_STEW, Items.RABBIT),
+        Map.entry(Items.BEETROOT_SOUP, Items.BEETROOT)
+    );
 
     private static final Map<UUID, Snapshot> SNAPSHOTS = new HashMap<>();
 
@@ -165,6 +183,25 @@ public final class StatProgressionTracker {
         ProgressionEvents.awardAndNotify(player, SkillId.COOKING, totalXp, "Prepared food collected", true);
 
         PlayerProfile profile = ProfileManager.get(player);
+        double ingredientChance = PassiveBonusService.chance(PassiveBonusService.total(
+            profile,
+            SkillId.COOKING,
+            GvContent.tree(SkillId.COOKING),
+            "ingredient_preservation"
+        ));
+        if (ingredientChance > 0.0) {
+            for (Map.Entry<Item, Integer> entry : newlyCooked.entrySet()) {
+                Item ingredient = PRESERVED_INGREDIENTS.get(entry.getKey());
+                if (ingredient == null) continue;
+                int preserved = ProgressionRewardMath.bonusRolls(
+                    entry.getValue(),
+                    ingredientChance,
+                    player.getRandom()::nextDouble
+                );
+                giveItem(player, ingredient, preserved);
+            }
+        }
+
         double extraOutputChance = PassiveBonusService.chance(PassiveBonusService.total(
             profile,
             SkillId.COOKING,

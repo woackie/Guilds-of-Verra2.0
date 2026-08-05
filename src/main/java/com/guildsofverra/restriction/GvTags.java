@@ -24,4 +24,6 @@ public final class GvTags {
     public static final TagKey<Item> CROSSBOWS = item("weapons/crossbows");
     public static final TagKey<Item> SHIELDS = item("shields/basic");
     public static final TagKey<Item> ELYTRA = item("exploration/elytra");
+    public static final TagKey<Item> PREPARED_FOODS = item("foods/prepared");
+    public static final TagKey<Item> COMMON_BONUS_RESOURCES = item("mining/common_bonus_resources");
 }

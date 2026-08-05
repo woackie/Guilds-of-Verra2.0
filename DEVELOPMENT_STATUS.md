@@ -1,4 +1,13 @@
-# Development status — 0.1.0-dev.5
+# Development status — 0.1.0-dev.7
+
+## Live milestone state
+
+- Dev.4 progression gates and elite foundations passed runtime testing and are promoted.
+- Dev.5 journal and collections passed the current bones-first playtest and are promoted; GUI polish remains deferred.
+- Dev.6 Expanded Encounters passed runtime testing and is promoted on `main`.
+- Dev.7 Functional Skill Passives is the current candidate. It gives 29 of 30 declared passive bonus types a real gameplay handler; `map_radius` is reserved for the future exploration-map system.
+
+See `MILESTONE_DEV_7.md` and `PASSIVE_TESTING.md` for the current implementation boundary and focused runtime checks. Historical dev.5 verification notes below remain useful for regression coverage but no longer describe the live branch order.
 
 ## Implemented and compiling in this snapshot
 
